@@ -1,0 +1,8 @@
+- Modélisation du problème
+- Fonction de voisinage (opérateurs de voisinages)
+- Définir la fonction de fitness
+- Générateur de solution aléatoire
+- Algo de séléctions dans le voisinage (métaheuristique)
+    - recuit simulé
+    - tabou liste
+    - constante temps pour la distance
