@@ -1,9 +1,13 @@
+from typing import List
 import matplotlib.pyplot as plt
 import networkx as nx
-from networkx import Graph
+from networkx import Graph, DiGraph
+from model.Warehouse import Warehouse
+from model.Customer import Customer
+from model.Route import Route
 
 
-class PrintGraph(Graph):
+class PrintGraph(DiGraph):
     """
     Example subclass of the Graph class.
 
@@ -58,23 +62,27 @@ class PrintGraph(Graph):
         self.fh.write("Clear graph\n")
 
 
-G = PrintGraph()
-G.add_node("foo")
-G.add_nodes_from("bar", weight=8)
-G.remove_node("b")
-G.remove_nodes_from("ar")
-print("Nodes in G: ", G.nodes(data=True))
-G.add_edge(0, 1, weight=10)
-print("Edges in G: ", G.edges(data=True))
-G.remove_edge(0, 1)
-G.add_edges_from(zip(range(3), range(1, 4)), weight=10)
-print("Edges in G: ", G.edges(data=True))
-G.remove_edges_from(zip(range(3), range(1, 4)))
-print("Edges in G: ", G.edges(data=True))
+def display_vrp(warehouse: Warehouse, customers: List[Customer], routes: List[Route]) -> None:
+    G = PrintGraph()
+    positions = dict()
+    colors = list()
+    current_color = 125
+    color_offset = int(8192875 / len(routes))
 
-G = PrintGraph()
-nx.add_path(G, range(10))
-nx.add_star(G, range(9, 13))
-pos = nx.spring_layout(G, seed=225)  # Seed for reproducible layout
-nx.draw(G, pos)
-plt.show()
+    for customer in customers:
+        G.add_node(customer.id_name, label = customer.id_name)
+        positions[customer.id_name] = [customer.x, customer.y]
+
+    for route in routes:
+        hex_color = "#" + hex(current_color).replace("0x", "").capitalize().ljust(6, "0")
+        print(f"Color: {hex_color}")
+
+        for delivery_index in range(len(route.path) - 1):
+            G.add_edge(route.path[delivery_index].id_name, route.path[delivery_index + 1].id_name)
+            colors.append(hex_color)
+        
+        current_color += color_offset
+
+    nx.draw(G, positions, with_labels=True, arrows=True, edge_color = colors, connectionstyle="arc3,rad=0.5", font_size=9)
+    # nx.draw_networkx()
+    plt.show()
