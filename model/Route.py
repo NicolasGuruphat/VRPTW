@@ -9,5 +9,5 @@ class Route:
         self.delivery_truck = delivery_truck
         self.path = []
     def add(self, customer):
-        self.delivery_truck.load(customer.demand)
+        # self.delivery_truck.load(customer.demand)
         self.path.append(customer)
