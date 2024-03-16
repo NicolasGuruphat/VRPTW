@@ -69,6 +69,9 @@ def display_vrp(warehouse: Warehouse, customers: List[Customer], routes: List[Ro
     current_color = 125
     color_offset = int(8192875 / len(routes))
 
+    G.add_node(warehouse.id_name, label = "WH")
+    positions[warehouse.id_name] = [warehouse.x, warehouse.y]
+
     for customer in customers:
         G.add_node(customer.id_name, label = customer.id_name)
         positions[customer.id_name] = [customer.x, customer.y]
