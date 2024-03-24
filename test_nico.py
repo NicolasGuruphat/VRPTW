@@ -38,7 +38,7 @@ deliveries = [d1, d2, d3, d4, d5]
 route = generate_route(deliveries)
 
 ################ EVERY COMBINAISON ######################
-
+'''
 
 couples = []
 
@@ -59,6 +59,7 @@ for neighbor in neighbors:
     display_vrp(w, customers, neighbor)
     print(total_distance(neighbor[0]))
 
+'''
 ###################### 2-OPT ############################
     
 couples = []
