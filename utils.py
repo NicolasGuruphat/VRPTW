@@ -16,8 +16,8 @@ def total_distance(route):
     return d
 
 def switch_two_deliveries_in_same_route(route, delivery_one, delivery_two):
-
-    # step 0 (?) : check if it works for time constraints
+    # TODO : switch time
+    # step 0 (?) : check if it works for time constraints (or it will be done before the call of this function)
 
     # step 1 : search delivery_one in route
     index_delivery_one = route.path.index(delivery_one)
@@ -28,5 +28,5 @@ def switch_two_deliveries_in_same_route(route, delivery_one, delivery_two):
     # step 3 : reverse
     route.path[index_delivery_one] = delivery_two
     route.path[index_delivery_two] = delivery_one
-
+    
     return route
