@@ -7,9 +7,26 @@ def distance(x1, y1, x2, y2) -> float:
 def get_time_between(x1, x2, y1, y2) -> float:
     return distance(x1, x2, y1, y2) * TIME_BY_DISTANCE_UNIT
 
+def total_distance(route):
+    d = 0
+    for i in range(len(route.path) - 1):
+        starting_point = route.path[i].customer
+        ending_point = route.path[i+1].customer
+        d += distance(starting_point.x, starting_point.y, ending_point.x, ending_point.y)
+    return d
+
 def switch_two_deliveries_in_same_route(route, delivery_one, delivery_two):
+
+    # step 0 (?) : check if it works for time constraints
+
     # step 1 : search delivery_one in route
+    index_delivery_one = route.path.index(delivery_one)
+
     # step 2 : search delivery_two in route
+    index_delivery_two = route.path.index(delivery_two)
+
     # step 3 : reverse
-    # step 4 (?) : check if it works for time constraints
+    route.path[index_delivery_one] = delivery_two
+    route.path[index_delivery_two] = delivery_one
+
     return route

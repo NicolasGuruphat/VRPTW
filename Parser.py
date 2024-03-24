@@ -46,7 +46,7 @@ def parse_vrptw_file(path: str) -> Tuple[Dict[str, str], int, int, int, List[War
         # Customer data
         f.readline()
 
-        while line := f.readline():
+        while line := f.readline() :
             customers.append(Customer(*line.split(" ")))
 
     return file_metadata, warehouse_number, customer_number, truck_package_limit, warehouses, customers
