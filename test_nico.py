@@ -13,21 +13,32 @@ def generate_route(deliveries):
         r.add(delivery)
     return r
 
-w = Warehouse(1,3,3,0,0)
+def print_couples(couples):
+    for couple in couples:
+        print(couple[0].customer.id_name, couple[1].customer.id_name)
+
+w = Warehouse(1,2,2,0,0)
 
 c1 = Customer("1",0,0,0,0,0,0)
-c2 = Customer("2",1,0,0,0,0,0)
-c3 = Customer("3",0,1,0,0,0,0)
+c2 = Customer("2",0,2,0,0,0,0)
+c3 = Customer("3",1,2,0,0,0,0)
+c4 = Customer("4",2,1,0,0,0,0)
+c5 = Customer("5",1,0,0,0,0,0)
 
-customers = [c1, c2, c3]
+customers = [c1, c2, c3, c4, c5]
 
 d1 = Delivery(c1,0)
 d2 = Delivery(c2,0)
 d3 = Delivery(c3,0)
+d4 = Delivery(c4,0)
+d5 = Delivery(c5,0)
 
-deliveries = [d1, d2, d3]
+deliveries = [d1, d2, d3, d4, d5]
 
 route = generate_route(deliveries)
+
+################ EVERY COMBINAISON ######################
+
 
 couples = []
 
@@ -36,16 +47,40 @@ for delivery_one in deliveries:
     for delivery_two in deliveries:
         if delivery_one != delivery_two and (delivery_one, delivery_two) not in couples and (delivery_two, delivery_one) not in couples:
             couples.append((delivery_one, delivery_two))
-
-# for couple in couples:
-#     print(couple[0].customer.id_name, couple[1].customer.id_name)
-
+    
 neighbors = []
 
 # call switch_two_deliveries_in_same_route for every couple
 for couple in couples:
     r = generate_route(deliveries) 
     neighbors.append([switch_two_deliveries_in_same_route(r, couple[0], couple[1])])
+
+for neighbor in neighbors:
+    display_vrp(w, customers, neighbor)
+    print(total_distance(neighbor[0]))
+
+###################### 2-OPT ############################
+    
+couples = []
+
+# generate 2-opt couples
+for i in range( len(deliveries) - 1 ):
+    there_is_a_before = i > 0
+    there_is_an_after = i+2 < len(deliveries)
+    if there_is_a_before and there_is_an_after:
+        delivery_one = deliveries[i]
+        delivery_two = deliveries[i+1]
+        couples.append((delivery_one, delivery_two))
+
+# start the neighbors list with current config to display_it at first
+neighbors = [[generate_route(deliveries)]]
+
+# call switch_two_deliveries_in_same_route for every couple
+for couple in couples:
+    r = generate_route(deliveries) 
+    neighbors.append([switch_two_deliveries_in_same_route(r, couple[0], couple[1])])
+
+print_couples(couples)
 
 for neighbor in neighbors:
     display_vrp(w, customers, neighbor)
