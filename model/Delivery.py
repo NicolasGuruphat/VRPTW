@@ -9,5 +9,9 @@ class Delivery:
     def departure(self):
         return self.delivery_time + self.customer.service
     
+    @property
+    def is_on_time(self):
+        return self.delivery_time >= self.customer.ready_time and self.delivery_time <= self.customer.due_time
+    
     def __repr__(self) -> str:
-        return '{"__type": "Delivery": "delivery_time":"' + str(self.delivery_time) + '", "departure": "' + str(self.departure) + '", "customer": "' + str(self.customer) + '"}'
+        return '{"__type": "Delivery", "delivery_time":"' + str(self.delivery_time) + '", "departure": "' + str(self.departure) + '", "customer": ' + str(self.customer) + '}'

@@ -62,7 +62,7 @@ class PrintGraph(DiGraph):
         # self.fh.write("Clear graph\n")
 
 
-def display_vrp(warehouse: Warehouse, customers: List[Customer], routes: List[Route]) -> None:
+def display_vrp(warehouse: Warehouse, customers: List[Customer], routes: List[Route], curved: bool = False) -> None:
     G = PrintGraph()
     positions = dict()
     colors = list()
@@ -80,12 +80,17 @@ def display_vrp(warehouse: Warehouse, customers: List[Customer], routes: List[Ro
         hex_color = "#" + hex(current_color).replace("0x", "").capitalize().ljust(6, "0")
         # print(f"Color: {hex_color}")
 
+        if route.path:
+            G.add_edge(warehouse.id_name, route.path[0].customer.id_name)
+            colors.append(hex_color)
+            G.add_edge(route.path[-1].customer.id_name, warehouse.id_name)
+            colors.append(hex_color)
         for delivery_index in range(len(route.path) - 1):
             G.add_edge(route.path[delivery_index].customer.id_name, route.path[delivery_index + 1].customer.id_name)
             colors.append(hex_color)
         
         current_color += color_offset
 
-    nx.draw(G, positions, with_labels=True, arrows=True, edge_color = colors, connectionstyle="arc3,rad=0.5", font_size=9)
+    nx.draw(G, positions, with_labels=True, arrows=True, edge_color = colors, connectionstyle="arc3,rad=0.5" if curved else "arc3", font_size=9)
     # nx.draw_networkx()
     plt.show()
