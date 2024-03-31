@@ -8,7 +8,8 @@ import math
 from printer.printer import display_vrp
 from utils import get_time_between, switch_two_deliveries_in_same_route, switch_two_deliveries
 from typing import List
-VRPTW_ = VRPTW('data111.vrp')
+# VRPTW_ = VRPTW('data111.vrp')
+VRPTW_ = VRPTW('data_test.vrp')
 
 totalServiceTime = 0
 
@@ -79,6 +80,10 @@ while customers_left:
         last_delivery_time = delivery.departure
         current_truck.load(next_customer.demand)
         customers_left.pop(customers_left.index(next_customer))
+    
+    if len(current_route.path) <= 0 and customers_left:
+        raise ValueError("VRPTW may have no solution")
+
 
 display_vrp(VRPTW_.warehouse, VRPTW_.customers, routes)
 
@@ -95,8 +100,10 @@ for route in routes:
 print(f"Works: {all(r1)}")
 print(f"Not working count: {len(r2)}")
 cop = routes[0].path.copy()
+print(routes[0].path)
 switch_two_deliveries(routes, routes[0].path[0], routes[0].path[1], VRPTW_.warehouse)
+print(routes[0].path)
 # switch_two_deliveries_in_same_route(routes[0], 0, 1, VRPTW_.warehouse)
 print(f"Switch : {routes[0].path != cop}")
 # print(r2)
-# display_vrp(VRPTW_.warehouse, VRPTW_.customers, routes)
+display_vrp(VRPTW_.warehouse, VRPTW_.customers, routes)
