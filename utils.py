@@ -404,6 +404,9 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
     # index_delivery_one = route.path.index(delivery_one)
     delivery_to_relocate = route_source.path[index_delivery_to_relocate]
 
+    if route_dest.delivery_truck.package_left < delivery_to_relocate.customer.demand:
+        return route_source, route_dest
+
     # step 2 : search delivery_two in route
     # index_delivery_two = route.path.index(delivery_two)
     # delivery_two = route.path[index_delivery_two]
@@ -442,6 +445,9 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
     # step 3 : reverse
     del route_source.path[index_delivery_to_relocate]
     route_dest.path.insert(index_delivery_new_next, delivery_to_relocate)
+
+    route_dest.delivery_truck.package_left -= delivery_to_relocate.customer.demand
+    route_source.delivery_truck.package_left += delivery_to_relocate.customer.demand
     
     return route_source, route_dest
 
@@ -501,6 +507,11 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
         index_from_two = index_to_two
         index_to_two = tmp
 
+    package_diff = sum([d.customer.demand for d in route_one.path[index_from_one:index_to_one + 1]]) - sum([d.customer.demand for d in route_two.path[index_from_two:index_to_two + 1]])
+    print(package_diff)
+    if route_one.delivery_truck.package_left + package_diff < 0 or route_two.delivery_truck.package_left - package_diff < 0:
+        return route_one, route_two
+
     beginning_time_one = 0
     beginning_x_one = warehouse.x
     beginning_y_one = warehouse.y
@@ -536,5 +547,8 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
     route_two_copy = route_two.path.copy()
     route_one.path = route_one_copy[:index_from_one] + route_two_copy[index_from_two:index_to_two + 1] + route_one_copy[index_to_one + 1:]
     route_two.path = route_two_copy[:index_from_two] + route_one_copy[index_from_one:index_to_one + 1] + route_two_copy[index_to_two + 1:]
+
+    route_one.delivery_truck.package_left += package_diff
+    route_two.delivery_truck.package_left -= package_diff
 
     return route_one, route_two
