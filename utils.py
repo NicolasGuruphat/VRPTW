@@ -166,14 +166,14 @@ def update_delivery_time_if_possible(params: List) -> bool:
     """Updates if all new routes are working
 
     Args:
-        params (List): list of (deliveries: List[Delivery], beginning_x, beginning_y, beginning_time)
+        params (List): list of (deliveries: List[Delivery], beginning_x, beginning_y, beginning_time, warehouse)
 
     Returns:
         bool: are new time windows working
     """
     global_new_times = list()
     
-    for deliveries, beginning_x, beginning_y, beginning_time in params:
+    for deliveries, beginning_x, beginning_y, beginning_time, warehouse in params:
         new_times = list()
 
         for delivery in deliveries:
@@ -190,6 +190,9 @@ def update_delivery_time_if_possible(params: List) -> bool:
             beginning_time = delivery_time + delivery.customer.service
 
         global_new_times.append(new_times)
+
+        if deliveries and get_time_between(deliveries[-1].customer.x, deliveries[-1].customer.y, warehouse.x, warehouse.y) + new_times[-1] > warehouse.due_time:
+            return False
 
     for new_times, deliveries in zip(global_new_times, [e[0] for e in params]):
         for new_time, delivery in zip(new_times, deliveries):
@@ -228,7 +231,7 @@ def switch_two_deliveries_in_same_route(route: Route, index_delivery_one: int, i
     changed_deliveries[index_delivery_one - index_min] = delivery_two
     changed_deliveries[index_delivery_two - index_min] = delivery_one
 
-    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time)]):
+    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
         return route
 
     # step 3 : reverse
@@ -278,8 +281,8 @@ def switch_two_deliveries_different_route(route_one: Route, route_two: Route, in
     
     if not update_delivery_time_if_possible(
             [
-                (changed_deliveries_one, beginning_x_one, beginning_y_one, beginning_time_one), 
-                (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two)
+                (changed_deliveries_one, beginning_x_one, beginning_y_one, beginning_time_one, warehouse), 
+                (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two, warehouse)
             ]
         ):
         return route_one, route_two
@@ -365,7 +368,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
         del changed_deliveries[index_delivery_to_relocate - index_min + 1]
 
 
-    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time)]):
+    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
         return route
 
     # step 3 : reverse
@@ -436,8 +439,8 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
 
     if not update_delivery_time_if_possible(
             [
-                (changed_deliveries_source, beginning_x_source, beginning_y_source, beginning_time_source),
-                (changed_deliveries_dest, beginning_x_dest, beginning_y_dest, beginning_time_dest)
+                (changed_deliveries_source, beginning_x_source, beginning_y_source, beginning_time_source, warehouse),
+                (changed_deliveries_dest, beginning_x_dest, beginning_y_dest, beginning_time_dest, warehouse)
             ]
         ):
         return route_source, route_dest
@@ -477,7 +480,7 @@ def reverse_in_same_route(route: Route, warehouse: Warehouse, index_from: Union[
     reversed_chunk.reverse()
     changed_deliveries = reversed_chunk + route.path[index_to + 1:]
 
-    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time)]):
+    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
         return route
     
     route.path = route.path[:index_from] + reversed_chunk + route.path[index_to + 1:]
@@ -537,8 +540,8 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
 
     if not update_delivery_time_if_possible(
             [
-                (changed_deliveries_one, beginning_x_one, beginning_y_one, beginning_time_one),
-                (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two)
+                (changed_deliveries_one, beginning_x_one, beginning_y_one, beginning_time_one, warehouse),
+                (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two, warehouse)
             ]
         ):
         return route_one, route_two
