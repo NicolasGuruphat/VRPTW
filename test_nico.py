@@ -7,23 +7,25 @@ from printer.printer import display_vrp
 from utils import switch_two_deliveries_in_same_route, total_distance
 
 def generate_route(deliveries):
-    t = DeliveryTruck(0)
+    t = DeliveryTruck(100)
     r = Route(t)
     for delivery in deliveries:
         r.add(delivery)
+        t.load(delivery.customer.demand)
     return r
 
 def print_couples(couples):
+    print("couples")
     for couple in couples:
         print(couple[0].customer.id_name, couple[1].customer.id_name)
 
-w = Warehouse(1,2,2,0,0)
+w = Warehouse("W1",1,1,0,230)
 
-c1 = Customer("1",0,0,0,0,0,0)
-c2 = Customer("2",0,2,0,0,0,0)
-c3 = Customer("3",1,2,0,0,0,0)
-c4 = Customer("4",2,1,0,0,0,0)
-c5 = Customer("5",1,0,0,0,0,0)
+c1 = Customer("1",0,0,0,230,1,1)
+c2 = Customer("2",0,2,0,230,1,1)
+c3 = Customer("3",1,2,0,230,1,1)
+c4 = Customer("4",2,1,0,230,1,1)
+c5 = Customer("5",1,0,0,230,1,1)
 
 customers = [c1, c2, c3, c4, c5]
 
@@ -76,13 +78,14 @@ for i in range( len(deliveries) - 1 ):
 # start the neighbors list with current config to display_it at first
 neighbors = [[generate_route(deliveries)]]
 
+print(couples)
 # call switch_two_deliveries_in_same_route for every couple
 for couple in couples:
     r = generate_route(deliveries) 
-    neighbors.append([switch_two_deliveries_in_same_route(r, couple[0], couple[1])])
+    neighbors.append([switch_two_deliveries_in_same_route(r, route.path.index(couple[0]), route.path.index(couple[1]), w)])
 
 print_couples(couples)
 
 for neighbor in neighbors:
-    display_vrp(w, customers, neighbor)
+    display_vrp(w, customers, neighbor, edge_label=True)
     print(total_distance(neighbor[0]))

@@ -4,6 +4,7 @@ from model.DeliveryTruck import DeliveryTruck
 from model.Warehouse import Warehouse
 from model.Route import Route
 from Parser import parse_vrptw_file
+from random import choice
 
 class VRPTW:
 
@@ -27,4 +28,5 @@ class VRPTW:
         self.deliveryTrucks = []
         self.routes = []
         
-        
+    def get_random_route(self):
+        return choice(self.routes)

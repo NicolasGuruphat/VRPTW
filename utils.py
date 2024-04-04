@@ -1,9 +1,10 @@
 from math import sqrt
 from typing import List, Union
-from config import TIME_BY_DISTANCE_UNIT
+from config import TIME_BY_DISTANCE_UNIT, TRUCK_WEIGHT_IN_FITNESS, TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT
 from model.Delivery import Delivery
 from model.Warehouse import Warehouse
 from model.Route import Route
+from model.VRPTW import VRPTW
 
 def distance(x1, y1, x2, y2) -> float:
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
@@ -11,13 +12,35 @@ def distance(x1, y1, x2, y2) -> float:
 def get_time_between(x1, x2, y1, y2) -> float:
     return distance(x1, x2, y1, y2) * TIME_BY_DISTANCE_UNIT
 
-def total_distance(route):
+def total_distance(route, warehouse):
     d = 0
+    if len(route.path) <= 0:
+        return d
+    
+    d += distance(warehouse.x, warehouse.y, route.path[0].customer.x, route.path[0].customer.y)
     for i in range(len(route.path) - 1):
         starting_point = route.path[i].customer
         ending_point = route.path[i+1].customer
         d += distance(starting_point.x, starting_point.y, ending_point.x, ending_point.y)
+    d += distance(warehouse.x, warehouse.y, route.path[-1].customer.x, route.path[-1].customer.y)
+
     return d
+
+def fitness(vrptw : VRPTW) -> float:
+    fitness = 0
+
+    for route in vrptw.routes:
+        fitness += total_distance(route, vrptw.warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+    
+    return fitness
+
+def fitness_vrptwless(routes : List[Route], warehouse: Warehouse) -> float:
+    fitness = 0
+
+    for route in routes:
+        fitness += total_distance(route, warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+    
+    return fitness
 
 def switch_two_deliveries(routes: List[Route], delivery_one: Delivery, delivery_two: Delivery, warehouse: Warehouse):
     route_one = [route for route in routes if delivery_one in route.path]
@@ -181,6 +204,7 @@ def update_delivery_time_if_possible(params: List) -> bool:
             # print(f"Deli {delivery.customer.id_name} - {delivery.is_on_time}")
 
             if not (delivery_time >= delivery.customer.ready_time and delivery_time <= delivery.customer.due_time):
+                # print(f"It didn't work 1 !")
                 return False
             else:
                 new_times.append(delivery_time)
@@ -192,11 +216,14 @@ def update_delivery_time_if_possible(params: List) -> bool:
         global_new_times.append(new_times)
 
         if deliveries and get_time_between(deliveries[-1].customer.x, deliveries[-1].customer.y, warehouse.x, warehouse.y) + new_times[-1] > warehouse.due_time:
+            # print(f"It didn't work 2 !")
             return False
 
     for new_times, deliveries in zip(global_new_times, [e[0] for e in params]):
         for new_time, delivery in zip(new_times, deliveries):
             delivery.delivery_time = new_time
+
+    # print(f"It worked !")
     
     return True
     
@@ -555,3 +582,27 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
     route_two.delivery_truck.package_left -= package_diff
 
     return route_one, route_two
+
+
+### POUR LE TABU ####################################################################################################################################################################
+
+def switch_two_deliveries_with_routes(route_one: Route, route_two: Route, delivery_one_index: int, delivery_two_index: int, warehouse: Warehouse):
+    if not route_one:
+        return
+    if not route_two:
+        return
+    
+    if route_one == route_two:
+        switch_two_deliveries_in_same_route(
+            route_one, 
+            delivery_one_index, 
+            delivery_two_index,
+            warehouse
+        )
+    else:
+        switch_two_deliveries_different_route(
+            route_one, route_two, 
+            delivery_one_index, 
+            delivery_two_index, 
+            warehouse
+        )
