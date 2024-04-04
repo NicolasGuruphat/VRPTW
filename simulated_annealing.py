@@ -20,4 +20,4 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
     # Should increase
     mu = 0.1
 
-    
+    n1 = ln(ln(0.8) / ln(0.01)) / ln(mu)
