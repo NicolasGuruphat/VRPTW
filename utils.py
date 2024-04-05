@@ -542,7 +542,7 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
         index_to_two = tmp
 
     package_diff = sum([d.customer.demand for d in route_one.path[index_from_one:index_to_one + 1]]) - sum([d.customer.demand for d in route_two.path[index_from_two:index_to_two + 1]])
-    print(package_diff)
+    # print(package_diff)
     if route_one.delivery_truck.package_left + package_diff < 0 or route_two.delivery_truck.package_left - package_diff < 0:
         return False
 
