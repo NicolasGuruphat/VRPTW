@@ -45,14 +45,14 @@ def fitness_vrptwless(routes : List[Route], warehouse: Warehouse) -> float:
 def switch_two_deliveries(routes: List[Route], delivery_one: Delivery, delivery_two: Delivery, warehouse: Warehouse):
     route_one = [route for route in routes if delivery_one in route.path]
     if not route_one:
-        return
+        return False
     route_two = [route for route in routes if delivery_two in route.path]
     if not route_two:
-        return
+        return False
     
     if route_one == route_two:
         route_one = route_one[0]
-        switch_two_deliveries_in_same_route(
+        return switch_two_deliveries_in_same_route(
             route_one, 
             route_one.path.index(delivery_one), 
             route_one.path.index(delivery_two),
@@ -61,17 +61,18 @@ def switch_two_deliveries(routes: List[Route], delivery_one: Delivery, delivery_
     else:
         route_one = route_one[0]
         route_two = route_two[0]
-        switch_two_deliveries_different_route(
+        return switch_two_deliveries_different_route(
             route_one, route_two, 
             route_one.path.index(delivery_one), 
             route_two.path.index(delivery_two), 
             warehouse
         )
+    return False
 
 def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, warehouse: Warehouse, delivery_new_previous: Union[Delivery, None] = None, delivery_new_next: Union[Delivery, None] = None):
     route_source = [route for route in routes if delivery_to_relocate in route.path]
     if not route_source:
-        return
+        return False
 
     route_dest_prev = []
     route_dest_next = []
@@ -81,13 +82,13 @@ def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, wareh
         route_dest_next = [route for route in routes if delivery_new_next in route.path]
 
     if (route_dest_prev != route_dest_next and delivery_new_next and delivery_new_previous) or not (route_dest_next or route_dest_prev):
-        return
+        return False
     
     route_dest = route_dest_prev + [r for r in route_dest_next if r not in route_dest_prev]
     
     if route_source == route_dest:
         route_source = route_source[0]
-        relocate_delivery_in_same_route(
+        return relocate_delivery_in_same_route(
             route_source, 
             route_source.path.index(delivery_to_relocate), 
             warehouse,
@@ -97,7 +98,7 @@ def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, wareh
     else:
         route_source = route_source[0]
         route_dest = (route_dest + route_dest_next)[0]
-        relocate_delivery_different_route(
+        return relocate_delivery_different_route(
             route_source, 
             route_dest, 
             route_source.path.index(delivery_to_relocate), 
@@ -105,6 +106,7 @@ def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, wareh
             route_dest.path.index(delivery_new_previous) if delivery_new_previous else None, 
             route_dest.path.index(delivery_new_next) if delivery_new_next else None
         )
+    return False
     
 def reverse(routes: List[Route], warehouse: Warehouse, delivery_from: Union[Delivery, None] = None, delivery_to: Union[Delivery, None] = None):
     route_from = []
@@ -115,7 +117,7 @@ def reverse(routes: List[Route], warehouse: Warehouse, delivery_from: Union[Deli
         route_to = [route for route in routes if delivery_to in route.path]
     
     if (route_from != route_to and route_from and route_to):
-        return
+        return False
     
     route = route_from + [r for r in route_to if r not in route_from]
     
@@ -129,7 +131,8 @@ def reverse(routes: List[Route], warehouse: Warehouse, delivery_from: Union[Deli
         if delivery_to:
            index_delivery_to = route.path.index(delivery_to)
 
-        reverse_in_same_route(route, warehouse, index_delivery_from, index_delivery_to)
+        return reverse_in_same_route(route, warehouse, index_delivery_from, index_delivery_to)
+    return False
 
 def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_from_one: Union[Delivery, None] = None, delivery_to_one: Union[Delivery, None] = None, delivery_from_two: Union[Delivery, None] = None, delivery_to_two: Union[Delivery, None] = None):
     route_one_from = []
@@ -140,7 +143,7 @@ def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_fro
         route_one_to = [route for route in routes if delivery_to_one in route.path]
 
     if (route_one_from != route_one_to and delivery_from_one and delivery_to_one) or not (route_one_from or route_one_to):
-        return
+        return False
     
     route_one = route_one_from + [r for r in route_one_to if r not in route_one_from]
 
@@ -152,7 +155,7 @@ def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_fro
         route_two_to = [route for route in routes if delivery_to_two in route.path]
 
     if (route_two_from != route_two_to and delivery_from_two and delivery_to_two) or not (route_two_from or route_two_to):
-        return
+        return False
     
     route_two = route_two_from + [r for r in route_two_to if r not in route_two_from]
 
@@ -175,7 +178,7 @@ def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_fro
             if delivery_to_two:
                 index_to_two = route_two[0].path.index(delivery_to_two) 
 
-        exchange_route_chunk_different_route(
+        return exchange_route_chunk_different_route(
             route_one[0], 
             route_two[0], 
             warehouse, 
@@ -184,6 +187,7 @@ def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_fro
             index_from_two,
             index_to_two
         )
+    return False
 
 def update_delivery_time_if_possible(params: List) -> bool:
     """Updates if all new routes are working
@@ -232,7 +236,7 @@ def switch_two_deliveries_in_same_route(route: Route, index_delivery_one: int, i
     # step 0 (?) : check if it works for time constraints (or it will be done before the call of this function)
 
     if index_delivery_one == index_delivery_two or max(index_delivery_one, index_delivery_two) >= len(route.path):
-        return route
+        return False
 
     # step 1 : search delivery_one in route
     # index_delivery_one = route.path.index(delivery_one)
@@ -259,20 +263,20 @@ def switch_two_deliveries_in_same_route(route: Route, index_delivery_one: int, i
     changed_deliveries[index_delivery_two - index_min] = delivery_one
 
     if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
-        return route
+        return False
 
     # step 3 : reverse
     route.path[index_delivery_one] = delivery_two
     route.path[index_delivery_two] = delivery_one
     
-    return route
+    return True
 
 def switch_two_deliveries_different_route(route_one: Route, route_two: Route, index_delivery_one: int, index_delivery_two: int, warehouse: Warehouse):
     # TODO : switch time
     # step 0 (?) : check if it works for time constraints (or it will be done before the call of this function)
 
     if index_delivery_one >= len(route_one.path) or index_delivery_two >= len(route_two.path) :
-        return route_one, route_two
+        return False
 
     # step 1 : search delivery_one in route
     # index_delivery_one = route.path.index(delivery_one)
@@ -283,7 +287,7 @@ def switch_two_deliveries_different_route(route_one: Route, route_two: Route, in
     delivery_two: Delivery = route_two.path[index_delivery_two]
 
     if route_one.delivery_truck.package_left + delivery_one.customer.demand - delivery_two.customer.demand < 0 or route_two.delivery_truck.package_left + delivery_two.customer.demand - delivery_one.customer.demand < 0:
-        return route_one, route_two
+        return False
 
     beginning_time_one = beginning_time_two = 0
     beginning_x_one = beginning_x_two = warehouse.x
@@ -312,7 +316,7 @@ def switch_two_deliveries_different_route(route_one: Route, route_two: Route, in
                 (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two, warehouse)
             ]
         ):
-        return route_one, route_two
+        return False
 
     # step 3 : reverse
     route_one.path[index_delivery_one] = delivery_two
@@ -321,7 +325,7 @@ def switch_two_deliveries_different_route(route_one: Route, route_two: Route, in
     route_one.delivery_truck.package_left += (delivery_one.customer.demand - delivery_two.customer.demand)
     route_two.delivery_truck.package_left += (delivery_two.customer.demand - delivery_one.customer.demand)
 
-    return route_one, route_two
+    return True
 
 def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: int, warehouse: Warehouse, index_delivery_new_previous: Union[int, None] = None, index_delivery_new_next: Union[int, None] = None):
     # TODO : switch time
@@ -335,7 +339,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
             (index_delivery_new_previous is None and index_delivery_new_next is None)
             or (index_delivery_new_previous is not None and index_delivery_new_next is not None and index_delivery_new_next != index_delivery_new_previous + 1)
         ):
-        return route
+        return False
         
     if (
             max(
@@ -348,7 +352,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
             ) <= -1
             or index_delivery_to_relocate == index_delivery_new_next or index_delivery_to_relocate == index_delivery_new_previous
         ):
-        return route
+        return False
 
     # step 1 : search delivery_one in route
     # index_delivery_one = route.path.index(delivery_one)
@@ -396,7 +400,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
 
 
     if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
-        return route
+        return False
 
     # step 3 : reverse
     if index_delivery_new_next >= len(route.path):
@@ -406,7 +410,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
         route.path.insert(index_delivery_new_next, delivery_to_relocate)
         del route.path[index_delivery_to_relocate + (1 if index_delivery_new_next < index_delivery_to_relocate else 0)]
     
-    return route
+    return True
 
 def relocate_delivery_different_route(route_source: Route, route_dest: Route, index_delivery_to_relocate: int, warehouse: Warehouse, index_delivery_new_previous: Union[int, None] = None, index_delivery_new_next: Union[int, None] = None):
     # TODO : switch time
@@ -420,7 +424,7 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
             (index_delivery_new_previous is None and index_delivery_new_next is None)
             or (index_delivery_new_previous is not None and index_delivery_new_next is not None and index_delivery_new_next != index_delivery_new_previous + 1)
         ):
-        return route_source, route_dest
+        return False
         
     if (
             index_delivery_new_previous >= len(route_dest.path)
@@ -428,14 +432,14 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
             or index_delivery_to_relocate >= len(route_source.path)
             or index_delivery_to_relocate < 0
         ):
-        return route_source, route_dest
+        return False
 
     # step 1 : search delivery_one in route
     # index_delivery_one = route.path.index(delivery_one)
     delivery_to_relocate = route_source.path[index_delivery_to_relocate]
 
     if route_dest.delivery_truck.package_left < delivery_to_relocate.customer.demand:
-        return route_source, route_dest
+        return False
 
     # step 2 : search delivery_two in route
     # index_delivery_two = route.path.index(delivery_two)
@@ -470,7 +474,7 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
                 (changed_deliveries_dest, beginning_x_dest, beginning_y_dest, beginning_time_dest, warehouse)
             ]
         ):
-        return route_source, route_dest
+        return False
 
     # step 3 : reverse
     del route_source.path[index_delivery_to_relocate]
@@ -479,7 +483,7 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
     route_dest.delivery_truck.package_left -= delivery_to_relocate.customer.demand
     route_source.delivery_truck.package_left += delivery_to_relocate.customer.demand
     
-    return route_source, route_dest
+    return True
 
 def reverse_in_same_route(route: Route, warehouse: Warehouse, index_from: Union[int, None] = None, index_to: Union[int, None] = None):
     if index_from is None or index_from < 0:
@@ -508,11 +512,11 @@ def reverse_in_same_route(route: Route, warehouse: Warehouse, index_from: Union[
     changed_deliveries = reversed_chunk + route.path[index_to + 1:]
 
     if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
-        return route
+        return False
     
     route.path = route.path[:index_from] + reversed_chunk + route.path[index_to + 1:]
 
-    return route
+    return True
 
 def exchange_route_chunk_different_route(route_one: Route, route_two: Route, warehouse: Warehouse, index_from_one: Union[int, None] = None, index_to_one: Union[int, None] = None, index_from_two: Union[int, None] = None, index_to_two: Union[int, None] = None):
     if index_from_one is None or index_from_one < 0:
@@ -540,7 +544,7 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
     package_diff = sum([d.customer.demand for d in route_one.path[index_from_one:index_to_one + 1]]) - sum([d.customer.demand for d in route_two.path[index_from_two:index_to_two + 1]])
     print(package_diff)
     if route_one.delivery_truck.package_left + package_diff < 0 or route_two.delivery_truck.package_left - package_diff < 0:
-        return route_one, route_two
+        return False
 
     beginning_time_one = 0
     beginning_x_one = warehouse.x
@@ -571,7 +575,7 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
                 (changed_deliveries_two, beginning_x_two, beginning_y_two, beginning_time_two, warehouse)
             ]
         ):
-        return route_one, route_two
+        return False
     
     route_one_copy = route_one.path.copy()
     route_two_copy = route_two.path.copy()
@@ -581,7 +585,7 @@ def exchange_route_chunk_different_route(route_one: Route, route_two: Route, war
     route_one.delivery_truck.package_left += package_diff
     route_two.delivery_truck.package_left -= package_diff
 
-    return route_one, route_two
+    return True
 
 
 ### POUR LE TABU ####################################################################################################################################################################
