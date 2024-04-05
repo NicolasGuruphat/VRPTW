@@ -135,4 +135,4 @@ print(fitness(VRPTW_))
 print(fitness(vrptw))
 from printer.printer import display_vrp
 display_vrp(VRPTW_.warehouse, VRPTW_.customers, VRPTW_.routes)
-display_vrp(vrptw, vrptw.customers, vrptw.routes)
+display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes)
