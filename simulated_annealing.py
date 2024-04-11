@@ -134,5 +134,7 @@ vrptw = simulated_annealing(VRPTW_)
 print(fitness(VRPTW_))
 print(fitness(vrptw))
 from printer.printer import display_vrp
+print(len(VRPTW_.routes))
+print(len(vrptw.routes))
 display_vrp(VRPTW_.warehouse, VRPTW_.customers, VRPTW_.routes)
 display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes)
