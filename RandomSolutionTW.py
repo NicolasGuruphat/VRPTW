@@ -8,8 +8,8 @@ import math
 from printer.printer import display_vrp
 from utils import get_time_between, switch_two_deliveries_in_same_route, switch_two_deliveries
 from typing import List
-# VRPTW_ = VRPTW('data111.vrp')
-VRPTW_ = VRPTW('data_test.vrp')
+VRPTW_ = VRPTW('data111.vrp')
+# VRPTW_ = VRPTW('data_test.vrp')
 
 totalServiceTime = 0
 
