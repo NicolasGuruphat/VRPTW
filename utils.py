@@ -26,19 +26,25 @@ def total_distance(route, warehouse):
 
     return d
 
-def fitness(vrptw : VRPTW) -> float:
+def fitness(vrptw : VRPTW, distance_only = True) -> float:
     fitness = 0
 
     for route in vrptw.routes:
-        fitness += total_distance(route, vrptw.warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+        if distance_only:
+            fitness += total_distance(route, vrptw.warehouse)
+        else:
+            fitness += total_distance(route, vrptw.warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
     
     return fitness
 
-def fitness_vrptwless(routes : List[Route], warehouse: Warehouse) -> float:
+def fitness_vrptwless(routes : List[Route], warehouse: Warehouse, distance_only = True) -> float:
     fitness = 0
 
     for route in routes:
-        fitness += total_distance(route, warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+        if distance_only:
+            fitness += total_distance(route, warehouse)
+        else:
+            fitness += total_distance(route, warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
     
     return fitness
 
@@ -606,3 +612,45 @@ def switch_two_deliveries_with_routes(route_one: Route, route_two: Route, delive
             delivery_two_index, 
             warehouse
         )
+
+'''
+def switch_two_deliveries_in_same_route_with_deliveries(route: Route, delivery_one: Delivery, delivery_two: Delivery, warehouse: Warehouse):
+    # TODO : switch time
+    # step 0 (?) : check if it works for time constraints (or it will be done before the call of this function)
+
+    if delivery_one == delivery_two:
+        return route
+
+    # step 1 : search delivery_one in route
+    # index_delivery_one = route.path.index(delivery_one)
+    # delivery_one = route.path[index_delivery_one]
+
+    # step 2 : search delivery_two in route
+    # index_delivery_two = route.path.index(delivery_two)
+    # delivery_two = route.path[index_delivery_two]
+
+    beginning_time = 0
+    beginning_x = warehouse.x
+    beginning_y = warehouse.y
+    index_min = 0
+
+    if (index_min := min(index_delivery_one, index_delivery_two)) > 0:
+        beginning_delivery = route.path[index_min - 1]
+        beginning_time = beginning_delivery.departure
+        beginning_x = beginning_delivery.customer.x
+        beginning_y = beginning_delivery.customer.y
+
+    changed_deliveries = route.path[index_min:]
+
+    changed_deliveries[index_delivery_one - index_min] = delivery_two
+    changed_deliveries[index_delivery_two - index_min] = delivery_one
+
+    if not update_delivery_time_if_possible([(changed_deliveries, beginning_x, beginning_y, beginning_time, warehouse)]):
+        return route
+
+    # step 3 : reverse
+    route.path[index_delivery_one] = delivery_two
+    route.path[index_delivery_two] = delivery_one
+    
+    return route
+'''

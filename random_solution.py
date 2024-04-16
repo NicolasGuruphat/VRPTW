@@ -14,11 +14,12 @@ def random_solution(vrptw: VRPTW) -> List[Route]:
     customers_left: list = vrptw.customers.copy()
     trucks = list()
     routes = list()
-
+    i = -1
     while customers_left:
+        i += 1
         current_truck = DeliveryTruck(vrptw.truck_package_limit)
         trucks.append(current_truck)
-        current_route = Route(current_truck)
+        current_route = Route(current_truck, i)
         routes.append(current_route)
 
         exist_reachable_customers = True

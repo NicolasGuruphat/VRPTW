@@ -6,9 +6,11 @@ from random import choice, randint
 class Route:
     delivery_truck: DeliveryTruck
     path: List[Delivery]
-    def __init__(self, delivery_truck):
+    route_id: int
+    def __init__(self, delivery_truck, route_id):
         self.delivery_truck = delivery_truck
         self.path = []
+        self.route_id = route_id
     
     def add(self, delivery):
         # self.delivery_truck.load(customer.demand)
