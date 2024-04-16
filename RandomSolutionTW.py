@@ -28,11 +28,12 @@ routes: List[Route] = []
 #     routes.append(Route(delivery_truck))
 
 customers_left = VRPTW_.customers.copy()
-
+i = -1
 while customers_left:
+    i += 1
     current_truck = DeliveryTruck(VRPTW_.truck_package_limit)
     trucks.append(current_truck)
-    current_route = Route(current_truck)
+    current_route = Route(current_truck, i)
     routes.append(current_route)
 
     exist_reachable_customers = True

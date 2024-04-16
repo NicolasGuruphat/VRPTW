@@ -20,10 +20,10 @@ minTruckNumber += 5 # To remove
 trucks = []
 routes: List[Route] = []
 
-for _ in range(minTruckNumber):
+for i in range(minTruckNumber):
     delivery_truck = DeliveryTruck(VRPTW_.truck_package_limit)
     trucks.append(delivery_truck)
-    routes.append(Route(delivery_truck))
+    routes.append(Route(delivery_truck, i))
 customers_left = VRPTW_.customers.copy()
 for route in routes:
     # assignation des 
