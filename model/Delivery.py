@@ -15,3 +15,6 @@ class Delivery:
     
     def __repr__(self) -> str:
         return '{"__type": "Delivery", "delivery_time":"' + str(self.delivery_time) + '", "departure": "' + str(self.departure) + '", "customer": ' + str(self.customer) + '}'
+    
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, Delivery) and value.customer == self.customer

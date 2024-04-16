@@ -10,7 +10,7 @@ from printer.printer import display_vrp
 
 ALLOWED_OPERATORS = {
     # exchange_route_chunk: [2, 4],
-    # switch_two_deliveries: [2],
+    switch_two_deliveries: [2],
     # reverse: [1],
     relocate_delivery: [2],
 }
@@ -25,9 +25,10 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
 
         if operator_to_use == relocate_delivery:
             error = not relocate_delivery(vrptw_copy.routes, random.choice(random.choice(vrptw_copy.routes).path), vrptw_copy.warehouse, **{random.choice(["delivery_new_previous", "delivery_new_next"]): random.choice(random.choice(vrptw_copy.routes).path)})
-            print(error)
-        # if operator_to_use == switch_two_deliveries:
-        #     error = not switch_two_deliveries(vrptw_copy.routes, random.choice(random.choice(vrptw_copy.routes).path), random.choice(random.choice(vrptw_copy.routes).path), vrptw_copy.warehouse)
+            # print(error)
+        elif operator_to_use == switch_two_deliveries:
+            error = not switch_two_deliveries(vrptw_copy.routes, random.choice(random.choice(vrptw_copy.routes).path), random.choice(random.choice(vrptw_copy.routes).path), vrptw_copy.warehouse)
+        #     print(error)
         # elif operator_to_use == reverse:
         #     r = random.choice(vrptw_copy.routes)
         #     l = len(r.path)
@@ -74,7 +75,7 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
     pl = 0
     for route in vrptw_copy.routes:
         pl += route.delivery_truck.package_left
-    print(f"PL {pl}")
+    # print(f"PL {pl}")
     
     routes_copy = vrptw_copy.routes.copy()
     for route in vrptw_copy.routes:
@@ -82,7 +83,8 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
             print("EMPTY")
             routes_copy.remove(route)
     vrptw_copy.routes = routes_copy
-    print(f"NT {len(routes_copy)}")
+    # print(f"NT {len(routes_copy)}")
+    # print(vrptw.routes == vrptw_copy.routes)
     return vrptw_copy
 
 def simulated_annealing(vrptw: VRPTW) -> VRPTW:
@@ -98,12 +100,14 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
     delta_f = sum([abs(delta_f_computed - initial_solution_fitness) for delta_f_computed in delta_fs]) / SIMULATED_ANNEALING_DELTA_F_SAMPLE
 
     t_0 = -(delta_f / log(0.8))
+    if t_0 == 0:
+        t_0 = 1
     
     # Should increase
-    mu = 0.95
+    mu = 0.90
 
     n1 = log(log(0.8) / log(0.01)) / log(mu)
-    n2 = 100000
+    n2 = 10000
     n_no_upgrade_max = 10000
 
     x_min = deepcopy(vrptw)
@@ -125,10 +129,10 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
 
             f_y = fitness(y)
             delta_f_current = f_y - f_current
-            print(f"{k} {l} : {f_current} {f_y} {delta_f_current}")
-            if delta_f_current == 0:
-                display_vrp(x_current.warehouse, x_current.customers, x_current.routes)
-                display_vrp(y.warehouse, y.customers, y.routes)
+            # print(f"{k} {l} : {f_current} {f_y} {delta_f_current}")
+            # if delta_f_current == 0:
+            #     display_vrp(x_current.warehouse, x_current.customers, x_current.routes)
+            #     display_vrp(y.warehouse, y.customers, y.routes)
 
             if delta_f_current <= 0:
                 f_current = f_y

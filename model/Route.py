@@ -19,3 +19,6 @@ class Route:
 
     def get_random_delivery_index(self):
         return randint(0, len(self.path))
+    
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, Route) and self.path == value.path

@@ -86,8 +86,10 @@ def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, wareh
     
     route_dest = route_dest_prev + [r for r in route_dest_next if r not in route_dest_prev]
     
+    route_source = route_source[0]
+    route_dest = route_dest[0]
     if route_source == route_dest:
-        route_source = route_source[0]
+        # print("Same route")
         return relocate_delivery_in_same_route(
             route_source, 
             route_source.path.index(delivery_to_relocate), 
@@ -96,8 +98,7 @@ def relocate_delivery(routes: List[Route], delivery_to_relocate: Delivery, wareh
             route_source.path.index(delivery_new_next) if delivery_new_next else None, 
         )
     else:
-        route_source = route_source[0]
-        route_dest = (route_dest + route_dest_next)[0]
+        # print("Different route")
         return relocate_delivery_different_route(
             route_source, 
             route_dest, 
@@ -405,7 +406,7 @@ def relocate_delivery_in_same_route(route: Route, index_delivery_to_relocate: in
     # step 3 : reverse
     if index_delivery_new_next >= len(route.path):
         route.path.append(delivery_to_relocate)
-        del route.path[0]
+        del route.path[index_delivery_to_relocate]
     else:
         route.path.insert(index_delivery_new_next, delivery_to_relocate)
         del route.path[index_delivery_to_relocate + (1 if index_delivery_new_next < index_delivery_to_relocate else 0)]
