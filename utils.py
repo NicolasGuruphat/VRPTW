@@ -30,7 +30,7 @@ def fitness(vrptw : VRPTW) -> float:
     fitness = 0
 
     for route in vrptw.routes:
-        fitness += total_distance(route, vrptw.warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+        fitness += total_distance(route, vrptw.warehouse) # + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
     
     return fitness
 
@@ -38,7 +38,7 @@ def fitness_vrptwless(routes : List[Route], warehouse: Warehouse) -> float:
     fitness = 0
 
     for route in routes:
-        fitness += total_distance(route, warehouse) + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
+        fitness += total_distance(route, warehouse) # + TRUCK_WEIGHT_IN_FITNESS + ((route.delivery_truck.package_left) / route.delivery_truck.package_limit * 100 * TRUCK_PACKAGE_LEFT_PER_CENTAGE_IMPACT)
     
     return fitness
 

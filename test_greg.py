@@ -59,7 +59,7 @@ r3.add(d8)
 r3.add(d9)
 r3.add(d10)
 display_vrp(w, VRPTW_.customers, [r1, r2, r3], edge_label = True)
-switch_two_deliveries([r1, r2, r3], d1, d10, w)
+# switch_two_deliveries([r1, r2, r3], d1, d10, w)
 # relocate_delivery([r1, r2, r3], d1, w,delivery_new_previous=d4)#, delivery_new_next=d6)#, d3)
 # reverse([r1, r2, r3], w, d5, d5)
 # exchange_route_chunk([r1, r2, r3], w, 
@@ -68,4 +68,5 @@ switch_two_deliveries([r1, r2, r3], d1, d10, w)
 #                     delivery_from_two=d5,
 #                     delivery_to_two=d6
 #                     )
+print(relocate_delivery([r1, r2, r3], d1, w,delivery_new_next=d1))
 display_vrp(w, VRPTW_.customers, [r1, r2, r3], edge_label = True)
