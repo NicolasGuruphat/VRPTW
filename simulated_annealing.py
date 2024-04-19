@@ -9,7 +9,7 @@ import sys
 from printer.printer import display_vrp
 
 ALLOWED_OPERATORS = {
-    # exchange_route_chunk: [2, 4],
+    exchange_route_chunk: [2, 4],
     switch_two_deliveries: [2],
     # reverse: [1],
     relocate_delivery: [2],
@@ -43,32 +43,32 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
         #         None if random.random() < 0.2 else r.path[from_index],
         #         None if from_index == l - 1 or from_index is None or random.random() < 0.2 else r.path[to_index]
         #     )
-        # elif exchange_route_chunk:
-        #     r1 = random.choice(vrptw_copy.routes)
-        #     l1 = len(r1.path)
-        #     from_index1 = random.randint(0, l1 - 1)
-        #     if from_index1 == l1 - 1:
-        #         to_index1 = None
-        #     else:
-        #         to_index1 = random.randint(from_index1 + 1, l1 - 1) if from_index1 else random.randint(0, l1 - 1)
+        elif exchange_route_chunk:
+            r1 = random.choice(vrptw_copy.routes)
+            l1 = len(r1.path)
+            from_index1 = random.randint(0, l1 - 1)
+            if from_index1 == l1 - 1:
+                to_index1 = None
+            else:
+                to_index1 = random.randint(from_index1 + 1, l1 - 1) if from_index1 else random.randint(0, l1 - 1)
 
-        #     routes_copy = vrptw_copy.routes.copy()
-        #     routes_copy.remove(r1)
-        #     r2 = random.choice(routes_copy)
-        #     l2 = len(r2.path)
-        #     from_index2 = random.randint(0, l2 - 1)
-        #     if from_index2 == l2 - 1:
-        #         to_index2 = None
-        #     else:
-        #         to_index2 = random.randint(from_index2 + 1, l2 - 1) if from_index2 else random.randint(0, l2 - 1)
-        #     error = not exchange_route_chunk(
-        #         vrptw_copy.routes,
-        #         vrptw_copy.warehouse,
-        #         None if random.random() < 0.2 else r1.path[from_index1],
-        #         None if from_index1 == l1 - 1 or from_index1 is None or random.random() < 0.2 else r1.path[to_index1],
-        #         None if random.random() < 0.2 else r2.path[from_index2],
-        #         None if from_index2 == l2 - 1 or from_index2 is None or random.random() < 0.2 else r2.path[to_index2]
-        #     )
+            routes_copy = vrptw_copy.routes.copy()
+            routes_copy.remove(r1)
+            r2 = random.choice(routes_copy)
+            l2 = len(r2.path)
+            from_index2 = random.randint(0, l2 - 1)
+            if from_index2 == l2 - 1:
+                to_index2 = None
+            else:
+                to_index2 = random.randint(from_index2 + 1, l2 - 1) if from_index2 else random.randint(0, l2 - 1)
+            error = not exchange_route_chunk(
+                vrptw_copy.routes,
+                vrptw_copy.warehouse,
+                None if random.random() < 0.2 else r1.path[from_index1],
+                None if from_index1 == l1 - 1 or from_index1 is None or random.random() < 0.2 else r1.path[to_index1],
+                None if random.random() < 0.2 else r2.path[from_index2],
+                None if from_index2 == l2 - 1 or from_index2 is None or random.random() < 0.2 else r2.path[to_index2]
+            )
         else:
             continue
 
@@ -104,10 +104,10 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
         t_0 = 1
     
     # Should increase
-    mu = 0.90
+    mu = 0.60
 
     n1 = log(log(0.8) / log(0.01)) / log(mu)
-    n2 = 10000
+    n2 = 100000
     n_no_upgrade_max = 10000
 
     x_min = deepcopy(vrptw)
@@ -115,8 +115,12 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
     f_min = initial_solution_fitness
     f_current = initial_solution_fitness
     i = 0
-
+    ####################################
+    t_0 = 80
+    ####################################
     t_k = t_0
+
+    print(f"TI {t_0}")
 
     for k in range(int(n1)):
         print(f"{k}/{int(n1)}")
@@ -148,6 +152,8 @@ def simulated_annealing(vrptw: VRPTW) -> VRPTW:
                     f_current = f_y
             i += 1
         t_k *= mu
+        mu *= 0.95
+        print(f"Meilleur {f_min}")
         if no_upgrade >= n_no_upgrade_max:
             continue
     return x_min
