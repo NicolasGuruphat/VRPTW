@@ -21,3 +21,6 @@ class Customer:
     
     def __repr__(self) -> str:
         return '{"__type": "Customer", "id_name":"' + self.id_name + '", "x": "' + str(self.x) + '", "y": "' + str(self.y) + '", "ready_time": "' + str(self.ready_time) + '", "due_time": "' + str(self.due_time) + '", "demand": "' + str(self.demand) + '", "service": "' + str(self.service) + '"}'
+    
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, Customer) and value.id_name == self.id_name
