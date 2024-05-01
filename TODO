@@ -1,0 +1,5 @@
+- Tester avec les fenêtres de temps
+- Essayer de faire varier mu durant l'exécution
+- Déterminer mu en fonction d'un n1 calculé et d'un t_n1 choisi
+- Essayer de comparer un mu élevé avec un n2 petit contre un mu petit avec un n2 élevé
+- Déterminer le nombre de tours de boucle en fonction de la taille de l'entrée
