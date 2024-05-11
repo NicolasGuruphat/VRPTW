@@ -8,13 +8,13 @@ from printer.printer import display_vrp
 import matplotlib.pyplot as plt
 import csv
 
-SIZE_TABU = 30
-ITERATION_NUMBER = 1000
+SIZE_TABU = 20
+ITERATION_NUMBER = 200
 method_used = {
-    "3opt" : 0,
+    # "3opt" : 0,
     "2opt" : 0,
-    "switch_two_deliveries_with_routes" : 0,
-    "reverse_same_route" : 0,
+    # "switch_two_deliveries_with_routes" : 0,
+    # "reverse_same_route" : 0,
     "relocate" : 0
 }
 result_false = 0
@@ -43,6 +43,15 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
         print("\n")
         print(i)
         current_x, f_current_x, rollback = get_neighborhood_without_tabu_list(previous_x, tabu)
+        # print(tabu)
+        print(f"action : {rollback[0][0]}")
+        action = rollback[0][0]
+        if action == 'relocate':
+            color = "red"
+        elif action == '2opt':
+            color = "green"
+        else:
+            color = "black"
         ''' 
         if len(last_fitnesses) != 0 and f_current_x == last_fitnesses[0]:
             check_pattern += 1
@@ -64,6 +73,8 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
         '''
         x.append(i)
         y.append(f_current_x)
+        colors.append(color)
+
         routes_copy = vrptw.routes.copy()
         vrptw.routes = routes_copy
         if current_x is None or f_current_x is None:
@@ -71,10 +82,10 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
         if previous_x is not None :
             f_previous_x = fitness(previous_x)
             delta_f = f_current_x - f_previous_x
+            # print(delta_f)
             if delta_f >= 0 and rollback != None:
                 # print("on ajoute")
                 for element in rollback:
-                    # print(element)
                     # if element not in tabu :# Voir s'il faut laisser cette ligne
                     tabu.append(element)
                     if(len(tabu) > size_tabu):
@@ -84,27 +95,27 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             x_min = current_x
             f_min = f_current_x
             print(f"new best : {f_current_x} ")
-            colors.append('green')
+            # colors.append('green')
             not_best = 0
             already_explored = {} # on reset la liste car on est sûr de ne pas être dans un cycle
         else :
             print(f"not best : {f_current_x}")
-            colors.append('red')
+            # colors.append('red')
             not_best += 1
         # if not_best >= SIZE_TABU: # to remove ?
         #     break
         if (str(f_current_x), str(tabu)) in already_explored.items():
             if not detected:
                 print("boucle détectée")
-                colors.pop()
-                colors.append('blue')
+                # colors.pop()
+                # colors.append('blue')
+                color = 'blue'
                 break
             detected = True
             # break
             # essayer sans le break pour voir si c'est bien au bon moment qu'on casse la boucle
         if(len(tabu) == size_tabu):
             already_explored[str(f_current_x)] = str(tabu)
-        
         # print(tabu)
         previous_x = current_x
 
@@ -118,14 +129,36 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
     print(f"nombre d'itération économisées : {iteration_number - i}")
     print(f"ecart : {initial - f_min}")
     print(f"meilleure fitness : {f_min}")
+    print(method_used)
     print(result_true,result_false)
     # print(method_used)
     plt.scatter(x,y, c=colors, s=1)
     plt.show()
     
     return x_min, f_min
-
 def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
+    global method_used
+
+    operators = [
+        get_neighborhood_without_tabu_list_opt2, 
+        get_neighborhood_without_tabu_list_relocate
+    ]
+    
+    best_solution = None
+    best_fitness = None
+    best_rollback = None
+
+    for operator in operators:
+        solution, f, how_to_rollback = operator(copy.deepcopy(vrptw), copy.deepcopy(tabu))
+        if (best_fitness == None or f < best_fitness) and f != None:
+            best_fitness = f
+            best_rollback = how_to_rollback
+            best_solution = solution
+    method_used[best_rollback[0][0]] += 1
+    return best_solution, best_fitness, best_rollback
+
+
+def get_neighborhood_without_tabu_list_relocate(vrptw : VRPTW, tabu):
     global method_used
     global result_false
     global result_true
@@ -178,7 +211,7 @@ def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
                             # si la livraison qu'on veux bouger est la même que la destination ou que l'arrivée
                             continue
 
-                        if {"base":delivery_to_relocate.customer.id_name, "previous": delivery_new_previous_id} in tabu or {"base":delivery_to_relocate.customer.id_name, "next":delivery_new_next_id} in tabu or {"base":delivery_new_previous_id, "next": delivery_to_relocate.customer.id_name} in tabu or {"base":delivery_new_next_id, "previous": delivery_to_relocate.customer.id_name} in tabu:
+                        if ("relocate",{"base":delivery_to_relocate.customer.id_name, "previous": delivery_new_previous_id}) in tabu or ("relocate",{"base":delivery_to_relocate.customer.id_name, "next":delivery_new_next_id}) in tabu or ("relocate",{"base":delivery_new_previous_id, "next": delivery_to_relocate.customer.id_name}) in tabu or ("relocate",{"base":delivery_new_next_id, "previous": delivery_to_relocate.customer.id_name}) in tabu:
                             # si l'action qu'on veux faire se trouve dans la liste tabu
                             # print(tabu)
                             # print({"base":delivery_to_relocate.customer.id_name, "previous": delivery_new_previous.customer.id_name} in tabu, {"base":delivery_to_relocate.customer.id_name, "next":delivery_new_next_id} in tabu)
@@ -211,11 +244,54 @@ def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
                             best_fitness = current_fitness
                             best_solution = vrptw_copy
                             best_action =  f'{delivery_new_previous_id} -> {delivery_to_relocate.customer.id_name} -> {delivery_new_next_id}' 
-                            how_to_rollback = [{"base":delivery_to_relocate.customer.id_name, "previous":delivery_to_relocate_previous_id},{"base":delivery_to_relocate.customer.id_name, "next":delivery_to_relocate_next_id}]
+                            how_to_rollback = [("relocate",{"base":delivery_to_relocate.customer.id_name, "previous":delivery_to_relocate_previous_id}),("relocate",{"base":delivery_to_relocate.customer.id_name, "next":delivery_to_relocate_next_id})]
     if(best_action == None):
         return None, None, None
-    print("best action : ",best_action)
+    # print("best action : ",best_action)
+    print(f"best relocate : {best_fitness}")
+
     return best_solution, best_fitness, how_to_rollback
+
+def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
+    '''
+    récupère le voisin avec la meilleur fitness
+    '''
+ 
+    # Faire une deep copy de routes avant de la modifier
+    best_f = None
+    best_action = None
+    best_neighbor = None
+    best_routes = None
+    vrptw_copy = vrptw # TODO : to remove # copy.deepcopy(vrptw)
+    for couple in generate_2opt_couples(vrptw_copy.routes):
+        route_index = couple[2]
+        action = [("2opt", route_index, couple[0], couple[1])]
+        if ("2opt", route_index, couple[1], couple[0]) in tabu or ("2opt", route_index, couple[0], couple[1]) in tabu: # voir lequel garder
+            # Le tirage est invalide, on saute cett itération
+            continue
+        
+        routes_copy = copy.deepcopy(vrptw_copy.routes)
+        result = switch_two_deliveries_in_same_route(routes_copy[route_index], couple[0], couple[1], vrptw_copy.warehouse)  
+        if result == False:
+            continue
+        # vrptw_copy_copy = copy.deepcopy(vrptw_copy)
+        # vrptw_copy_copy.routes = routes_copy
+
+        f_neigbhor = fitness_vrptwless(routes_copy, vrptw_copy.warehouse)
+
+        if best_f is None or f_neigbhor < best_f :
+            
+            best_routes = routes_copy 
+            best_action = action
+            best_f = f_neigbhor
+    # print(best_f)
+    if(best_routes == None):
+        return None, None, None
+    best_neighbor = vrptw_copy
+    best_neighbor.routes = best_routes
+    print(f"best 2 opt : {best_f}")
+    return best_neighbor, best_f, best_action
+
 '''
 SAME_PARAMETERS = 2
 
