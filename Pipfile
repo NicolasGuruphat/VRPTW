@@ -12,6 +12,7 @@ networkx = "*"
 numpy = "*"
 matplotlib = "*"
 pulp = "*"
+cspy = "*"
 vrpy = "*"
 
 [dev-packages]
