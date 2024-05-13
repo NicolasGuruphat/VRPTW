@@ -2,7 +2,7 @@ from random_solution import random_solution
 from config import SIMULATED_ANNEALING_DELTA_F_SAMPLE
 from model.VRPTW import VRPTW
 from utils import fitness_vrptwless, fitness, exchange_route_chunk, switch_two_deliveries, reverse, relocate_delivery
-from math import log, exp
+from math import log, exp, sqrt
 from copy import deepcopy
 import random
 import csv
@@ -11,7 +11,7 @@ from printer.printer import display_vrp
 import time
 
 ALLOWED_OPERATORS = {
-    exchange_route_chunk: [2, 4],
+    # exchange_route_chunk: [2, 4],
     switch_two_deliveries: [2],
     # reverse: [1],
     relocate_delivery: [2],
@@ -132,7 +132,7 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
     # print(vrptw.routes == vrptw_copy.routes)
     return vrptw_copy
 
-def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None) -> VRPTW:
+def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None, t_final: float = 0.001) -> VRPTW:
     BEST_AT[0] = 0 
     initial_solution_routes = random_solution(vrptw)
     vrptw.routes = initial_solution_routes
@@ -154,7 +154,11 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
     if mu_param:
         mu = mu_param
 
-    n1 = log(log(0.8) / log(0.01)) / log(mu)
+    # n1 = log(log(0.8) / log(0.01)) / log(mu)
+    n1 = sqrt(delta_f)
+
+    mu = exp((log(t_final) - log(t_0)) / n1)
+
     n2 = 10000
     if n2_param:
         n2 = n2_param
@@ -166,13 +170,15 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
     f_current = initial_solution_fitness
     i = 0
     ####################################
-    t_0 = 80
-    if t0_param:
-        t_0 = t0_param
+    # t_0 = 80
+    # if t0_param:
+    #     t_0 = t0_param
     ####################################
     t_k = t_0
 
     print(f"TI {t_0}")
+    print(f"MU {mu}")
+    print(f"DF {delta_f}")
 
     for k in range(int(n1)):
         print(f"{k}/{int(n1)}")
@@ -216,12 +222,13 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
             continue
     return x_min
 
-VRPTW_ = VRPTW('data101 short.vrp')
+VRPTW_ = VRPTW('data101.vrp')
+# VRPTW_ = VRPTW('data101 short.vrp')
 
-SIM = True
+SIM = False
 
 mus_full = [0.5,0.6,0.7,0.75,0.8,0.85,0.9,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99]
-mus = [mus_full[2]]
+mus = [mus_full[5]]
 if SIM:
     last_line = None
     try:
@@ -311,12 +318,12 @@ if SIM:
 
 
 else:
-    vrptw = simulated_annealing(VRPTW_)
-    print(fitness(VRPTW_))
-    print(fitness(vrptw))
+    vrptw = simulated_annealing(VRPTW_, t_final=0.86)
+    print(f"Fitness init {fitness(VRPTW_)}")
+    print(f"Fitness computed {fitness(vrptw)}")
     from printer.printer import display_vrp
     print(f"BAT {BEST_AT}")
-    print(len(VRPTW_.routes))
-    print(len(vrptw.routes))
+    print(f"Trucks init {len(VRPTW_.routes)}")
+    print(f"Trucks computed {len(vrptw.routes)}")
     display_vrp(VRPTW_.warehouse, VRPTW_.customers, VRPTW_.routes)
     display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes)
