@@ -11,7 +11,7 @@ from printer.printer import display_vrp
 import time
 
 ALLOWED_OPERATORS = {
-    exchange_route_chunk: [2, 4],
+    # exchange_route_chunk: [2, 4],
     switch_two_deliveries: [2],
     # reverse: [1],
     relocate_delivery: [2],
@@ -158,6 +158,7 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
     n2 = 10000
     if n2_param:
         n2 = n2_param
+
     n_no_upgrade_max = 10000
 
     x_min = deepcopy(vrptw)
