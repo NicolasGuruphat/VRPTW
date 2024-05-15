@@ -148,6 +148,7 @@ TESTS SUR GROS ECHANTILLONS
 
 TESTS AVEC TW
 -
+La sélection aléatoire d'un voisin implique que l'on doit chercher un voisin valide (qui respecte les contraites temporelles, de capacité). Ces voisins sont moins nombreux avec les fenêtres de temps et donc la recherche dure plus longtemps. Cela a donc un impacte important que n'a pas un Tabu qui cherche tous les voisins.
 
 # Difficultés et axes d'amélioration
 

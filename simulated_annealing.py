@@ -318,7 +318,9 @@ if SIM:
 
 
 else:
+    begin = time.time()
     vrptw = simulated_annealing(VRPTW_, t_final=0.86)
+    print(f"Time took : {time.time() - begin}")
     print(f"Fitness init {fitness(VRPTW_)}")
     print(f"Fitness computed {fitness(vrptw)}")
     from printer.printer import display_vrp
