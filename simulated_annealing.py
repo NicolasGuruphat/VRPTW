@@ -222,7 +222,7 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
             continue
     return x_min
 
-VRPTW_ = VRPTW('data101.vrp')
+VRPTW_ = VRPTW('data101 short.vrp')
 # VRPTW_ = VRPTW('data101 short.vrp')
 
 SIM = False
