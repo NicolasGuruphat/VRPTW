@@ -132,7 +132,7 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
     # print(vrptw.routes == vrptw_copy.routes)
     return vrptw_copy
 
-def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None, t_final: float = 0.001) -> VRPTW:
+def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None, t_final: float = 0.001, **kwargs: dict) -> VRPTW:
     BEST_AT[0] = 0 
     initial_solution_routes = random_solution(vrptw)
     vrptw.routes = initial_solution_routes
@@ -232,26 +232,27 @@ mus = [mus_full[5]]
 if SIM:
     last_line = None
     try:
-        with open(f"./30_first_101/sim{mus[0]}.csv", "r", newline="") as file:
+        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "r", newline="") as file:
             lines = file.readlines()
             if len(lines) >= 2:
                 last_line = lines[-1]
     except Exception:
         pass
     if not last_line:
-        with open(f"./30_first_101/sim{mus[0]}.csv", "w", newline="") as file:
+        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "w", newline="") as file:
             csv.writer(file).writerow(["MU", "OPT_USED", "N2", "T0", "F0", "F_AVG", "F_MIN", "F_MAX", "AVG_BEST_AT", "MIN_BEST_AT", "MAX_BEST_AT", "INIT_NB_TRUCKS", "AVG_NB_TRUCKS", "MIN_NB_TRUCKS", "MAX_NB_TRUCKS", "AVG_EXEC_T", "MIN_EXEC_T", "MAX_EXEC_T"])
 
     params = list()
     opt_used = ["R", "RS", "RE", "RSE", "RI", "RISE"]
-    n2s = [10000]
-    t0s = [3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,150,200,300,400,500,1000]
+    n2s = [10000, 1000]
+    way_to_get_n1 = ["SQRT", "LN", "2SQRT", "2LN"]
+    t_n1s = [0.86]
+    # t0s = [3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,150,200,300,400,500,1000]
 
-    for mu in mus:
-        for opt in opt_used:
-            for n2 in n2s:
-                for t0 in t0s:
-                    params.append((mu, opt, n2, t0))
+    for opt in opt_used:
+        for n2 in n2s:
+            for t_n1 in t_n1s:
+                params.append((mu, opt, n2, t0))
 
     last_dones = (0,0,0,0)
     if last_line:
@@ -313,7 +314,7 @@ if SIM:
         min_exec_t = min(exec_times)
         max_exec_t = max(exec_times)
 
-        with open(f"./30_first_101/sim{mus[0]}.csv", "a", newline="") as file:
+        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "a", newline="") as file:
             csv.writer(file).writerow([mu, opt, n2, t0, f0, f_avg, f_min, f_max, avg_best_at, min_best_at, max_best_at, init_nb_trucks, avg_nb_trucks, min_nb_trucks, max_nb_trucks, avg_exec_t, min_exec_t, max_exec_t])
 
 
