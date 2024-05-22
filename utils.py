@@ -9,8 +9,8 @@ from model.VRPTW import VRPTW
 def distance(x1, y1, x2, y2) -> float:
     return sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
 
-def get_time_between(x1, x2, y1, y2) -> float:
-    return distance(x1, x2, y1, y2) * TIME_BY_DISTANCE_UNIT
+def get_time_between(x1, y1, x2, y2) -> float:
+    return distance(x1, y1, x2, y2) * TIME_BY_DISTANCE_UNIT
 
 def total_distance(route, warehouse):
     d = 0
@@ -196,6 +196,35 @@ def exchange_route_chunk(routes: List[Route], warehouse: Warehouse, delivery_fro
         )
     return False
 
+def check_validity(vrp: VRPTW) -> bool:
+    b_x = vrp.warehouse.x
+    b_y = vrp.warehouse.y
+    for route in vrp.routes:
+        actual_time = 0
+        beginning_x = b_x
+        beginning_y = b_y
+
+        for delivery in route.path:
+            actual_time = max(delivery.customer.ready_time, actual_time + get_time_between(beginning_x, beginning_y, delivery.customer.x, delivery.customer.y))
+
+            if not (actual_time >= delivery.customer.ready_time and actual_time <= delivery.customer.due_time):
+                print(f"TWs doesn't work !")
+                return False
+            
+            beginning_x = delivery.customer.x
+            beginning_y = delivery.customer.y
+            actual_time = actual_time + delivery.customer.service
+        
+        actual_time += get_time_between(b_x, b_y, route.path[-1].customer.x, route.path[-1].customer.y)
+        if actual_time > vrp.warehouse.due_time:
+            print(f"Back too late {route.path[-1].customer.id_name} {actual_time}")
+            return False
+        
+        print(f"Arrival route {vrp.routes.index(route)} at {actual_time}")
+
+    return True
+
+
 def update_delivery_time_if_possible(params: List) -> bool:
     """Updates if all new routes are working
 
@@ -226,7 +255,9 @@ def update_delivery_time_if_possible(params: List) -> bool:
 
         global_new_times.append(new_times)
 
-        if deliveries and get_time_between(deliveries[-1].customer.x, deliveries[-1].customer.y, warehouse.x, warehouse.y) + new_times[-1] > warehouse.due_time:
+        # if deliveries:
+        #     print(get_time_between(deliveries[-1].customer.x, deliveries[-1].customer.y, warehouse.x, warehouse.y) + beginning_time)
+        if deliveries and get_time_between(deliveries[-1].customer.x, deliveries[-1].customer.y, warehouse.x, warehouse.y) + beginning_time > warehouse.due_time:
             # print(f"It didn't work 2 !")
             return False
 
@@ -462,13 +493,13 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
 
     if index_delivery_to_relocate > 0:
         beginning_delivery = route_source.path[index_delivery_to_relocate - 1]
-        beginning_time_source = beginning_delivery.delivery_time
+        beginning_time_source = beginning_delivery.departure
         beginning_x_source = beginning_delivery.customer.x
         beginning_y_source = beginning_delivery.customer.y
     
     if index_delivery_new_previous > -1:
         beginning_delivery = route_dest.path[index_delivery_new_previous]
-        beginning_time_dest = beginning_delivery.delivery_time
+        beginning_time_dest = beginning_delivery.departure
         beginning_x_dest = beginning_delivery.customer.x
         beginning_y_dest = beginning_delivery.customer.y
 

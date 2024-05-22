@@ -1,8 +1,8 @@
 from random_solution import random_solution
 from config import SIMULATED_ANNEALING_DELTA_F_SAMPLE
 from model.VRPTW import VRPTW
-from utils import fitness_vrptwless, fitness, exchange_route_chunk, switch_two_deliveries, reverse, relocate_delivery
-from math import log, exp
+from utils import fitness_vrptwless, fitness, exchange_route_chunk, switch_two_deliveries, reverse, relocate_delivery, check_validity
+from math import log, exp, sqrt
 from copy import deepcopy
 import random
 import csv
@@ -317,7 +317,9 @@ else:
     print(fitness(vrptw))
     from printer.printer import display_vrp
     print(f"BAT {BEST_AT}")
-    print(len(VRPTW_.routes))
-    print(len(vrptw.routes))
+    print(f"Trucks init {len(VRPTW_.routes)}")
+    print(f"Trucks computed {len(vrptw.routes)}")
+    print(f"Is random ok : {check_validity(VRPTW_)}")
+    print(f"Is ok : {check_validity(vrptw)}")
     display_vrp(VRPTW_.warehouse, VRPTW_.customers, VRPTW_.routes)
     display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes)
