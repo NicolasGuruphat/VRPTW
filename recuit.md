@@ -134,21 +134,121 @@ Nous avons $t_0 = \frac{-\Delta f}{\ln(0.8)}$ et $t_{n_1} = 0.86$. Reste à dét
 Pour cela, il faudrait trouver une valeur qui dépende de la taille de l'entrée. Plus la taille de l'entrée est grande, plus l'écart entre la fitness de la meilleure solution et celle de la pire est grand ou au moins constant (Raisonnement par l'absurde, si la différence entre la fitness de la meilleure solution et celle de la pire diminuait quand la taille de l'entrée augmente, alors la pire solution serait égale/semblable à la meilleure pour une taille d'entrée $x_{k}$ avec $k \longrightarrow \infty$ **et donc aussi pour $x_{k+1}$ !** Hors cela est vraie pour un et deux clients mais par pour trois alors c'est absurde). $\Delta f$ calculé à partir de solutions aléatoires pourrait donc être une bonne piste, il est, cependant, trop élevé pour être utilisé tel quel. Il existe plusieurs fonctions permettant de réduire celle valeur pour éviter un trop grand nombres d'itérations tout en évitant de trop rapidement converger vers l'infini : racine carrée et logarithme néperien. Nous continuerons donc avec $n_1 = \sqrt{|\Delta f|}$ ou $n_1 = \ln{|\Delta f|}$
 
 Si on implémente cela, dans le cas des trente premiers clients du fichier 101, on constate facilement que $n_1$ est très voire trop petit si calculé avec $ln$ (environ 3-4) et la solution finale peine à avoir une fitness en dessous de 400 alors que l'optimale est d'environ 358 contrairement à $\sqrt{}$, pour laquelle les valeurs de $n_1$ sont plus correctes (6-8) et où l'optimale est parfois atteint (environ une fois sur dix dans le cas présent). On remarque que c'est discutablement efficace pour un petit jeu de données.  
-Si on reprend les cent clients du fichier data101, $\Delta f$ est bien évidemment plus élevé et donc $n_1$ aussi. !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-TESTS SUR LE MU CALCULÉ
--
+Si on reprend les cent clients du fichier data101, $\Delta f$ est bien évidemment plus élevé et donc $n_1$ aussi. Nous reviendrons sur l'analyse des résultats avec un $\mu$ calculé par la suite.
 
 ## Température finale et nombre d'itérations avant le meilleur minimum
 
 ## Le choix des opérateurs
 
-TESTS SUR GROS ECHANTILLONS
--
+Intéressons-nous maintenant à la fitness finale en fonction des opérateurs pour pouvoir déterminer quel groupe d'opérateurs pourrait être le plus pertinent.
 
-TESTS AVEC TW
--
-La sélection aléatoire d'un voisin implique que l'on doit chercher un voisin valide (qui respecte les contraites temporelles, de capacité). Ces voisins sont moins nombreux avec les fenêtres de temps et donc la recherche dure plus longtemps. Cela a donc un impacte important que n'a pas un Tabu qui cherche tous les voisins.
+![Moyenne des fitness finales par groupe d'opérateurs](./graphs/fitness_group_by_opts.png)
+
+(R: Relocate, S: Switch, E: Cross-Exchange, I: Reverse)  
+
+On peut voir que Relocate seul n'est pas très efficace pour trouver une bonne solution et que les autres groupes testés resent assez homogènes. Nous allons quand même nous intéresser à deux groupes, RS et RSE. Nous allons ignoré les groupes avec Reverse car il n'améliore pas directement la fitness et est trop difficile à appliquer avec des fenêtres de temps.
+- RSE : Très clairement le meilleur avec un $\mu$ faible ( $<0.65$ ), ce qui devrait être notre cas post-analyse. Il se confond avec les autres courbes à mesure que $\mu$ augmente. Le cross-exchange reste cependant plus coûteux en temps et plus la taille des morceaux échangés est grand, moins il a de chance d'être compatible avec les fenêtres de temps.
+- RS : Relocate et Switch représentent le compromis entre efficacité (temps d'exécution) et pertinence, même s'il est dans le pire groupe quant à la fitness obtenue, il reste proche du reste du classement. Une bonne alternative pour se permettre de faire quelques tours de boucles supplémentaires si on veut réutiliser le temps économiser par la vitesse d'exécution.
+
+Dans le cadre de la mise en place des fenêtres de temps, nous nous concentrerons donc principalement sur le couple d'opérateurs Relocate Switch.
+
+![Moyenne des best at par groupe d'opérateurs](./graphs/best_at_group_by_opts.png)
+
+On peut voir que la vitesse de convergence est inversement porportionelle à la fitness finale. Malgré une fitness finale moins bonne, on pourrait donc envisager l'usage de Relocate comme seule opérateur si on veut une convergence rapide.
+
+![Moyenne du temps d'exécution par groupe d'opérateurs](./graphs/exec_time_opts.png)
+
+Sur ce graphique on peut voir que Relocate seul prend beaucoup de temps, donc malgré une convergence rapide, son exécution est plus longue. Cela motive donc notre choix de rester sur les groupes d'opérateurs Relocate Switch Cross-Exchange et Relocate Switch.
+
+# Mu calculé avec fenêtres de temps, Relocate + Switch vs Relocate + Swich + Cross-Exchange
+
+Nous allons poursuivre l'analyse avec les cent clients du fichiers 101 et les fenêtres de temps.  
+La sélection aléatoire d'un voisin implique que l'on doit chercher un voisin valide (qui respecte les contraites temporelles, de capacité). Ces voisins sont moins nombreux avec les fenêtres de temps et donc la recherche dure plus longtemps. Cela a donc un impacte important que n'a pas un Tabu qui cherche tous les voisins. Mais dans le cas du recuit, les fenêtres de temps signifient aussi un $\Delta f$ plus important donc un $n_1$ calculé plus élevé avec un nombre de solutions valides plus faibles, on devrait donc pouvoir visiter une plus grande proportion de solutions et donc avoir plus de chance de se rapprocher de l'un résultat optimal.  
+
+Prenons la moyenne de cinq résultats pour les groupes d'hyperparamètres suivants :
+
+| Hyper paramètres | Moyennes des meilleures fitness observées |
+|---|---|
+| Relocate + Switch, SQRT | 1660 |
+| Relocate + Switch, LN | 1733 |
+| Relocate + Switch, 2*SQRT | 1658 |
+| Relocate + Switch, 2*LN | 1665 |
+| Relocate + Switch + Cross-Exchange, SQRT | 1720 |
+| Relocate + Switch + Cross-Exchange, LN | 1858 |
+| Relocate + Switch + Cross-Exchange, 2*SQRT | 1821 |
+| Relocate + Switch + Cross-Exchange, 2*LN | 1834 |
+
+On voit donc que le couple Relocate + Switch donne de meilleurs résultats, observation que l'on peut appuyer si on jette un oeil à ce tableau mais sur les trente premiers clients seulement avec des conditions similaires (nombre d'exécutions):
+
+| Hyper paramètres | Moyennes des meilleures fitness observées |
+|---|---|
+| Relocate + Switch, SQRT | 682 |
+| Relocate + Switch, LN | 682 |
+| Relocate + Switch, 2*SQRT | 682 |
+| Relocate + Switch, 2*LN | 682 |
+| Relocate + Switch + Cross-Exchange, SQRT | 799 |
+| Relocate + Switch + Cross-Exchange, LN | 767 |
+| Relocate + Switch + Cross-Exchange, 2*SQRT | 779 |
+| Relocate + Switch + Cross-Exchange, 2*LN | 770 |
+
+On remarque que dans le cas présent, sur les vingt recuits effectués avec Relocate + Switch, la solution optimale à été obtenue 19 fois (95%) alors que Relocate + Switch + Cross-Exchange n'a pas atteint l'optimal une seule fois.
+
+## Convergence
+
+Pour les trente premiers clients du fichier 101 avec les fenêtres de temps, voici un tableau de la moyenne du nombre d'itérations avec de trouver le plus petit minimum en fonction des hyper-paramètres effectuée sur cinq exécutions du recuit :
+
+| Fonction de calcul de $n_1$ \ Opérateurs utilisés | RS | RSE |
+|---|---|---|
+| SQRT | 61187 sur 88500 | 2399 sur  67000 |
+| LN | 33653 sur 41990 | 7203 sur 40000 |
+| 2*SQRT | 77919 sur 145000 | 12366 sur 138000 | 
+| 2*LN | 61146 sur 83000 | 5113 sur 79000 |
+
+Et pour les cent premiers clients du même fichier :
+
+| Fonction de calcul de $n_1$ \ Opérateurs utilisés | RS | RSE |
+|---|---|---|
+| SQRT | 90673 sur 110000 | 87769 sur  123000 |
+| LN | 42015 sur 50000 | 37759 sur 46000 |
+| 2*SQRT | 121919 sur 230000 | 110112 sur 222000 | 
+| 2*LN | 85110 sur 100000 | 79245 sur 100000 |
+
+
+Si on s'intéresse au nombre d'itérations avec l'obtention de la meilleure solution pour l'exécution du recuit, on peut voir que cette valeur est plus ou moins inférieure au nombre total d'itérations (Proche de $best\_at \longrightarrow n_1 \times n_2$ pour $n_1$ calculé avec $\sqrt{}$ alors qu'il est proche de la moitié pour $2\sqrt{}$). Sachant qu'il était difficile d'attendre une bonne valeur pour les trente premiers clients, on peut en déduire que $n_1$ en fonction de la taille de l'entrée croît plus vite que le le nombre d'itérations nécessaires pour obtenir une bonne solution en fonction de cette même taille. On remarque aussi que le nombre d'itérations nécessaires est moins élevé avec Relocate + Switch + Cross-Exchange mais cela car les résultats sont moins bons (cf partie précédente).
+
+Si l'on doit choisir une façon de calculer $n_1$, on va tout d'abord rejeter $\ln$ qui donne des résultats sensiblement moins bons car ne laisse pas la convergence se faire à cause de valeurs trop petites. Les trois autres façons donnent des résultats similaires, il faudrait donc d'autres essais avec des jeux de données plus conséquents pour voir si une différence apparait entre ces derniers mais nous choisirons $\sqrt{}$ pour la suite pour réaliser le reste de l'analyse avec trente ou cent clients.
+
+## Augmenter la granularité de la température
+
+
+
+## Qualité de la solution
+
+Pour essayer de juger la qualité des résultats du recuit, la fitness est intéressante mais manque d'un référentiel pour passer du quantifiable au qualifiable. Pour la suite, nous travaillerons avec l'ensemble des fichiers de données et avec trente et cent clients. Les résultats seront comparés aux résultats gloutons (avec une priorité aux clients directement livrables les plus proches) mais aussi à l'"optimal" déterminé avec un autre outil se basant sur la programmation linéaire (dont la fiabilité n'a pas pu être vérifié) uniquement pour les trente clients car trop long avec cent.  
+Les résultats sont la moyenne de cinq exécutions :
+
+| Fichier du jeu de données (nombre de clients) \ Opérateurs utilisés | Glouton | Recuit | PL hypothétique |
+|---|---|---|---|
+| 101 (30) | 1089.282448171974 | 682.0534548509409 | 682.0534548509409 |
+| 102 (30) | 1057.6737806455794 |  |  |
+| 111 (30) | 922.9133908185511 |  |  |
+| 112 (30) | 606.1457655565695 |  |  |
+| 201 (30) | 851.094076314574 |  |  |
+| 202 (30) | 746.8752190488493 |  |  |
+| 1101 (30) | 1180.6508074676167 |  |  |
+| 1102 (30) | 1059.5755092274464 |  |  |
+| 1201 (30) | 1234.2533327152512 |  |  |
+| 1202 (30) | 1030.373582292059 |  |  |
+| 101 (100) | 3107.7777100922544 | 1660.761803803932 |  |
+| 102 (100) | 2956.4952202799095 |  |  |
+| 111 (100) | 2081.840103804694 |  |  |
+| 112 (100) | 2076.9618938202198 |  |  |
+| 201 (100) | 2511.9294477406997 |  |  |
+| 202 (100) | 2339.502433057424 |  |  |
+| 1101 (100) | 3509.0538453669546 |  |  |
+| 1102 (100) | 3259.497225301454 |  |  |
+| 1201 (100) | 3149.177595442274 |  |  |
+| 1202 (100) | 3327.9963142188844 |  |  |
 
 # Difficultés et axes d'amélioration
 

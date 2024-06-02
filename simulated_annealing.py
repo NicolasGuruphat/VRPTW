@@ -53,7 +53,7 @@ OPT_MAP = {
 
 BEST_AT = [0]
 
-def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
+def get_random_neighbor(vrptw: VRPTW, opt = ALLOWED_OPERATORS) -> VRPTW:
     vrptw_copy = deepcopy(vrptw)
 
     error = True
@@ -61,7 +61,7 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
     begin = time.time()
 
     while error:
-        operator_to_use = random.choice(list(ALLOWED_OPERATORS.keys()))
+        operator_to_use = random.choice(list(opt.keys()))
 
         if operator_to_use == relocate_delivery:
             error = not relocate_delivery(vrptw_copy.routes, random.choice(random.choice(vrptw_copy.routes).path), vrptw_copy.warehouse, **{random.choice(["delivery_new_previous", "delivery_new_next"]): random.choice(random.choice(vrptw_copy.routes).path)})
@@ -133,7 +133,10 @@ def get_random_neighbor(vrptw: VRPTW) -> VRPTW:
     return vrptw_copy
 
 def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None, t_final: float = 0.001, **kwargs: dict) -> VRPTW:
-    BEST_AT[0] = 0 
+    BEST_AT[0] = 0
+
+    opt_to_use = {relocate_delivery:0,switch_two_deliveries:0,exchange_route_chunk:0} if kwargs.get("opt") == "RSE" else {relocate_delivery:0,switch_two_deliveries:0}
+
     initial_solution_routes = random_solution(vrptw)
     vrptw.routes = initial_solution_routes
     initial_solution_fitness = fitness(vrptw)
@@ -155,7 +158,17 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
         mu = mu_param
 
     # n1 = log(log(0.8) / log(0.01)) / log(mu)
-    n1 = sqrt(delta_f)
+    way = kwargs.get("way")
+    if way == "SQRT":
+        n1 = sqrt(delta_f)
+    elif way == "LN":
+        n1 = log(delta_f)
+    elif way == "2SQRT":
+        n1 = 2 * sqrt(delta_f)
+    elif way == "2LN":
+        n1 = 2 * log(delta_f)
+    else:
+        n1 = sqrt(delta_f)
 
     mu = exp((log(t_final) - log(t_0)) / n1)
 
@@ -188,7 +201,7 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
             # sys.stdout.write("\r{0}>".format(l))
             # sys.stdout.flush()
 
-            y = get_random_neighbor(x_current)
+            y = get_random_neighbor(x_current, opt=opt_to_use)
 
             f_y = fitness(y)
             delta_f_current = f_y - f_current
@@ -212,7 +225,7 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
                     f_current = f_y
             i += 1
             if time.time() - begin >= 180:
-                with open("./30_first_101/logs.csv", "a", newline="") as file:
+                with open("./100_first_101_tw/logs.csv", "a", newline="") as file:
                     file.write(f"Timeout {k} / {n1}; {l} {mu} {t_k}\n")
                     break
         t_k *= mu
@@ -220,48 +233,53 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
         print(f"Meilleur {f_min}")
         if no_upgrade >= n_no_upgrade_max:
             continue
-    return x_min
+    return (x_min, mu, t_0, n1) if kwargs.get("return_mu") else x_min
 
-VRPTW_ = VRPTW('data101 short.vrp')
+VRPTW_ = VRPTW('data101.vrp')
 # VRPTW_ = VRPTW('data101 short.vrp')
 
-SIM = False
+SIM = True
 
 mus_full = [0.5,0.6,0.7,0.75,0.8,0.85,0.9,0.91,0.92,0.93,0.94,0.95,0.96,0.97,0.98,0.99]
 mus = [mus_full[5]]
 if SIM:
     last_line = None
     try:
-        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "r", newline="") as file:
+        with open(f"./100_first_101_tw/sim.csv", "r", newline="") as file:
             lines = file.readlines()
             if len(lines) >= 2:
                 last_line = lines[-1]
     except Exception:
         pass
     if not last_line:
-        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "w", newline="") as file:
-            csv.writer(file).writerow(["MU", "OPT_USED", "N2", "T0", "F0", "F_AVG", "F_MIN", "F_MAX", "AVG_BEST_AT", "MIN_BEST_AT", "MAX_BEST_AT", "INIT_NB_TRUCKS", "AVG_NB_TRUCKS", "MIN_NB_TRUCKS", "MAX_NB_TRUCKS", "AVG_EXEC_T", "MIN_EXEC_T", "MAX_EXEC_T"])
+        with open(f"./100_first_101_tw/sim.csv", "w", newline="") as file:
+            csv.writer(file).writerow(["AVG_MU", "MIN_MU", "MAX_MU", "OPT_USED", "N2", "AVG_T0", "MIN_T0", "MAX_T0", "F0", "F_AVG", "F_MIN", "F_MAX", "AVG_BEST_AT", "MIN_BEST_AT", "MAX_BEST_AT", "INIT_NB_TRUCKS", "AVG_NB_TRUCKS", "MIN_NB_TRUCKS", "MAX_NB_TRUCKS", "AVG_EXEC_T", "MIN_EXEC_T", "MAX_EXEC_T","AVG_N1", "MIN_N1", "MAX_N1", "WAY"])
 
     params = list()
-    opt_used = ["R", "RS", "RE", "RSE", "RI", "RISE"]
-    n2s = [10000, 1000]
-    way_to_get_n1 = ["SQRT", "LN", "2SQRT", "2LN"]
+    opt_used = ["RSE"]
+    # opt_used = ["RS", "RSE"]
+    # opt_used = ["R", "RS", "RE", "RSE", "RI", "RISE"]
+    n2s = [10000]
+    # n2s = [10000, 1000]
+    way_to_get_n1 = ["SQRT"]
+    # way_to_get_n1 = ["SQRT", "LN", "2SQRT", "2LN"]
     t_n1s = [0.86]
     # t0s = [3,4,5,6,7,8,9,10,15,20,25,30,40,50,60,70,80,90,100,150,200,300,400,500,1000]
 
     for opt in opt_used:
         for n2 in n2s:
             for t_n1 in t_n1s:
-                params.append((mu, opt, n2, t0))
+                for way in way_to_get_n1:
+                    params.append((opt, n2, t_n1, way))
 
     last_dones = (0,0,0,0)
     if last_line:
         split_line = last_line.split(",")
-        last_mu = float(split_line[0])
-        last_opt = str(split_line[1])
-        last_n2 = int(split_line[2])
-        last_t0 = int(split_line[3])
-        last_dones = (last_mu, last_opt, last_n2, last_t0)
+        last_way = str(split_line[-1])
+        last_opt = str(split_line[3])
+        last_n2 = int(split_line[4])
+        # last_t0 = int(split_line[3])
+        last_dones = (last_opt, last_n2, t_n1s[0], last_way.split("/")[0])
     
     try:
         params = params[params.index(last_dones) + 1:]
@@ -269,23 +287,29 @@ if SIM:
         pass
 
     for param in params:
-        mu = param[0]
-        opt = param[1]
-        n2 = param[2]
-        t0 = param[3]
+        opt = param[0]
+        n2 = param[1]
+        t_n1 = param[2]
+        way = param[3]
 
-        print(f"Doing {mu} {opt} {n2} {t0}")
+        print(f"Doing {opt} {n2} {t_n1} {way}")
 
-        ALLOWED_OPERATORS = OPT_MAP.get(opt, {relocate_delivery: [2]})
+        # ALLOWED_OPERATORS = OPT_MAP.get(opt, {relocate_delivery: [2]})
 
         fs = list()
         trucks = list()
         best_ats = list()
         exec_times = list()
-        for _ in range(1):
+        computed_mus = list()
+        t_0s = list()
+        n_1s = list()
+        for _ in range(5):
             try:
                 begin = time.time_ns()
-                vrptw: VRPTW = simulated_annealing(VRPTW_, t0, mu, n2)
+                vrptw, computed_mu, computed_t0, computed_n1 = simulated_annealing(VRPTW_, n2_param=n2, t_final=t_n1, **{"opt": opt, "way": way, "return_mu": True})
+                computed_mus.append(computed_mu)
+                n_1s.append(computed_n1)
+                t_0s.append(computed_t0)
                 end = time.time_ns()
                 fs.append(fitness(vrptw))
                 best_ats.append(BEST_AT[0])
@@ -303,6 +327,15 @@ if SIM:
         f_avg = sum(fs) / len(fs)
         f_min = min(fs)
         f_max = max(fs)
+        n1_avg = sum(n_1s) / len(n_1s)
+        n1_min = min(n_1s)
+        n1_max = max(n_1s)
+        t0_avg = sum(t_0s) / len(t_0s)
+        t0_min = min(t_0s)
+        t0_max = max(t_0s)
+        mu_avg = sum(computed_mus) / len(computed_mus)
+        mu_min = min(computed_mus)
+        mu_max = max(computed_mus)
         avg_best_at = sum(best_ats) / len(best_ats)
         min_best_at = min(best_ats)
         max_best_at = max(best_ats)
@@ -314,8 +347,8 @@ if SIM:
         min_exec_t = min(exec_times)
         max_exec_t = max(exec_times)
 
-        with open(f"./100_first_101_tw/sim{mus[0]}.csv", "a", newline="") as file:
-            csv.writer(file).writerow([mu, opt, n2, t0, f0, f_avg, f_min, f_max, avg_best_at, min_best_at, max_best_at, init_nb_trucks, avg_nb_trucks, min_nb_trucks, max_nb_trucks, avg_exec_t, min_exec_t, max_exec_t])
+        with open(f"./100_first_101_tw/sim.csv", "a", newline="") as file:
+            csv.writer(file).writerow([mu_avg, mu_min, mu_max, opt, n2, t0_avg, t0_min, t0_max, f0, f_avg, f_min, f_max, avg_best_at, min_best_at, max_best_at, init_nb_trucks, avg_nb_trucks, min_nb_trucks, max_nb_trucks, avg_exec_t, min_exec_t, max_exec_t, n1_avg, n1_min, n1_max, way])
 
 
 else:

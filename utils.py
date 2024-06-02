@@ -462,13 +462,13 @@ def relocate_delivery_different_route(route_source: Route, route_dest: Route, in
 
     if index_delivery_to_relocate > 0:
         beginning_delivery = route_source.path[index_delivery_to_relocate - 1]
-        beginning_time_source = beginning_delivery.delivery_time
+        beginning_time_source = beginning_delivery.departure
         beginning_x_source = beginning_delivery.customer.x
         beginning_y_source = beginning_delivery.customer.y
     
     if index_delivery_new_previous > -1:
         beginning_delivery = route_dest.path[index_delivery_new_previous]
-        beginning_time_dest = beginning_delivery.delivery_time
+        beginning_time_dest = beginning_delivery.departure
         beginning_x_dest = beginning_delivery.customer.x
         beginning_y_dest = beginning_delivery.customer.y
 
