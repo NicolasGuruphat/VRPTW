@@ -24,3 +24,6 @@ class Customer:
     
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Customer) and value.id_name == self.id_name
+    
+    def str_hash(self) -> str:
+        return self.id_name
