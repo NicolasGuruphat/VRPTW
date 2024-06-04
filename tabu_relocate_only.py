@@ -10,41 +10,54 @@ import csv
 
 SIZE_TABU = 20
 ITERATION_NUMBER = 200
-method_used = {
+
+result_false = 0
+result_true = 0
+
+def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATION_NUMBER, sch_detect = True) -> Tuple[VRPTW, int] :
+    global selected_action
+    global unselected_action
+    global result_true
+    global result_false
+    print("\n\n\n")
+    method_used = {
     # "3opt" : 0,
     "2opt" : 0,
     # "switch_two_deliveries_with_routes" : 0,
     # "reverse_same_route" : 0,
     "relocate" : 0
 }
-result_false = 0
-result_true = 0
-
-def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATION_NUMBER) -> Tuple[VRPTW, int] :
-    global selected_action
-    global unselected_action
-    global result_true
-    global result_false
     x_min = vrptw
     f_min = fitness(vrptw)
     tabu = []
     # print(f"initial : {f_min}")
-    initial = f_min
     previous_x = vrptw
     x = []
     y = []
+    size = []
     colors = []
     not_best = 0
     # last_fitnesses = []
     # check_pattern = 0
     already_explored = {}
     detected = False
+    j = 0
     for i in range(iteration_number) :
-        print("\n")
-        print(i)
+        
         current_x, f_current_x, rollback = get_neighborhood_without_tabu_list(previous_x, tabu)
         # print(tabu)
+        # if i%10 == 0:
+            # print(i)
+        # print(i) 
+           
+        '''
+        print("\n")
+        print(i)
         print(f"action : {rollback[0][0]}")
+        '''
+        if(current_x == None or rollback == None):
+            print("pas de solution a proposer")
+            break
         action = rollback[0][0]
         if action == 'relocate':
             color = "red"
@@ -62,9 +75,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             print("pattern detecté")
             break
         '''
-        if(current_x == None):
-            print("pas de solution a proposer")
-            break
+        
         '''
         last_fitnesses.append(f_current_x)
         if len(last_fitnesses) > size_tabu + 1:
@@ -94,19 +105,22 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             # print(f"old best : {f_min} ")
             x_min = current_x
             f_min = f_current_x
-            print(f"new best : {f_current_x} ")
+            # print(f"new best : {f_current_x} ")
             # colors.append('green')
+            size.append(7)
             not_best = 0
             already_explored = {} # on reset la liste car on est sûr de ne pas être dans un cycle
         else :
-            print(f"not best : {f_current_x}")
+            # print(f"not best : {f_current_x}")
             # colors.append('red')
+            size.append(1)
             not_best += 1
         # if not_best >= SIZE_TABU: # to remove ?
         #     break
-        if (str(f_current_x), str(tabu)) in already_explored.items():
+        hash = current_x.str_hash()
+        if sch_detect and (current_x.str_hash(), str(tabu)) in already_explored.items():
             if not detected:
-                print("boucle détectée")
+                # print("boucle détectée")
                 # colors.pop()
                 # colors.append('blue')
                 color = 'blue'
@@ -115,29 +129,41 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             # break
             # essayer sans le break pour voir si c'est bien au bon moment qu'on casse la boucle
         if(len(tabu) == size_tabu):
-            already_explored[str(f_current_x)] = str(tabu)
+            already_explored[hash] = str(tabu)
+
+        if(len(already_explored) > size_tabu):
+            del already_explored[next(iter(already_explored))]
+        print(len(already_explored))
+        for key, value in already_explored.items():
+            print("\n")
+            print(key, value)
         # print(tabu)
         previous_x = current_x
 
-    
+        method_used[rollback[0][0]] += 1
+        j += 1
+
     # print(f"selected_action {selected_action} unselected_action {unselected_action}")
+    '''
+    print(f"nombre d'itération économisées : {iteration_number - j}")
     print("### PARAMETRES ###")
     print(f"taille tabu : {size_tabu}")
     print(f"nombre d'iteration : {iteration_number}")
     print("### RESULTATS ###")
-    print(f"nombre d'itération réel : {i}")
-    print(f"nombre d'itération économisées : {iteration_number - i}")
+    print(f"nombre d'itération réel : {j}")
     print(f"ecart : {initial - f_min}")
     print(f"meilleure fitness : {f_min}")
     print(method_used)
     print(result_true,result_false)
     # print(method_used)
-    plt.scatter(x,y, c=colors, s=1)
+    plt.scatter(x,y, c=colors, s=size)
     plt.show()
-    
-    return x_min, f_min
+    '''
+    plt.scatter(x,y, c=colors, s=size)
+    plt.show()
+    return x_min, f_min, j, method_used
+
 def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
-    global method_used
 
     operators = [
         get_neighborhood_without_tabu_list_opt2, 
@@ -150,16 +176,17 @@ def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
 
     for operator in operators:
         solution, f, how_to_rollback = operator(copy.deepcopy(vrptw), copy.deepcopy(tabu))
-        if (best_fitness == None or f < best_fitness) and f != None:
+        if f != None and (best_fitness == None or f < best_fitness):
             best_fitness = f
             best_rollback = how_to_rollback
             best_solution = solution
-    method_used[best_rollback[0][0]] += 1
+    if solution == None or f == None or how_to_rollback == None:
+        return None, None, None
+    
     return best_solution, best_fitness, best_rollback
 
 
 def get_neighborhood_without_tabu_list_relocate(vrptw : VRPTW, tabu):
-    global method_used
     global result_false
     global result_true
     best_fitness = None
@@ -248,7 +275,7 @@ def get_neighborhood_without_tabu_list_relocate(vrptw : VRPTW, tabu):
     if(best_action == None):
         return None, None, None
     # print("best action : ",best_action)
-    print(f"best relocate : {best_fitness}")
+    # print(vf"best relocate : {best_fitness}")
 
     return best_solution, best_fitness, how_to_rollback
 
@@ -267,7 +294,7 @@ def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
         route_index = couple[2]
         action = [("2opt", route_index, couple[0], couple[1])]
         if ("2opt", route_index, couple[1], couple[0]) in tabu or ("2opt", route_index, couple[0], couple[1]) in tabu: # voir lequel garder
-            # Le tirage est invalide, on saute cett itération
+            # Le tirage est invalide, on saute cette itération
             continue
         
         routes_copy = copy.deepcopy(vrptw_copy.routes)
@@ -289,27 +316,79 @@ def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
         return None, None, None
     best_neighbor = vrptw_copy
     best_neighbor.routes = best_routes
-    print(f"best 2 opt : {best_f}")
+    # print(f"best 2 opt : {best_f}")
     return best_neighbor, best_f, best_action
 
-'''
-SAME_PARAMETERS = 2
 
-with open(f"./tabu_relocate_only/sim_2.csv", "w", newline="") as file:
-    csv.writer(file).writerow(["size_tabu", "nb_iteration", "avg"])
+SAME_PARAMETERS = 1
+file_name = "./tabu_relocate_only/test_101_short.csv"
+with open(file_name, "w", newline="") as file:
+    csv.writer(file).writerow(["size_tabu", "nb_iteration", "avg", "min", "max", "avg_iteration", "min_iteration", "max_iteration", "avg_relocate (%)", "avg_2_opt (%)"])
 
-for size_tabu in range(0,200, 2):
-    for nb_iteration in range(0, 2000, 100):
-        print(f"start {size_tabu} {nb_iteration}")
-        sum = 0
+# size_tabu_list = [0,4,16,64]
+# nb_iteration_list = [0, 40, 160, 640]
+# todo : uncomment above
+
+size_tabu_list = [8]
+nb_iteration_list = [300]
+ 
+# file_list = ["data101_short.vrp"]
+# for file in file_list
+for size_tabu in size_tabu_list:
+    for nb_iteration in nb_iteration_list:
+        print(f"\nstart size_tabu : {size_tabu}, nb_iteration {nb_iteration}\n")
+        
+        sum_fitness = 0
+        min_fitness = None
+        max_fitness = None
+
+        sum_iteration = 0
+        min_iteration = None
+        max_iteration = None
+
+        sum_relocate = 0
+        sum_2_opt = 0
         for i in range(SAME_PARAMETERS):
             vrptw = VRPTW('data101_short.vrp')
             vrptw.routes = random_solution(vrptw)
-            tabu = tabu_search(vrptw, size_tabu, nb_iteration)
-            sum += tabu[1]
-        avg = sum/SAME_PARAMETERS
-        with open(f"./tabu_relocate_only/sim_2.csv", "a", newline="") as file:
-            csv.writer(file).writerow([size_tabu, nb_iteration, avg])
+            cp_routes = copy.deepcopy(vrptw.routes)
+            s,f,j, method_used = tabu_search(vrptw, size_tabu, nb_iteration, False)
+            
+            sum_fitness += f
+            sum_iteration += j
+
+            sum_relocate += method_used['relocate']
+            sum_2_opt += method_used['2opt']
+
+            if min_fitness == None or f < min_fitness:
+                min_fitness = f
+            if max_fitness == None or f > max_fitness:
+                max_fitness = f
+            
+            if min_iteration == None or j < min_iteration:
+                min_iteration = j
+            if max_iteration == None or j > max_iteration:
+                max_iteration = j
+             
+        avg_fitness = sum_fitness/SAME_PARAMETERS
+        avg_iteration = sum_iteration/SAME_PARAMETERS
+
+        
+        avg_relocate_percentage = 0
+        avg_2_opt_percentage = 0
+
+        total_action = sum_relocate + sum_2_opt
+        if total_action != 0:
+            avg_relocate = sum_relocate/SAME_PARAMETERS#/total_action*100
+            avg_2_opt = sum_2_opt/SAME_PARAMETERS#/total_action*100
+            total = avg_relocate + avg_2_opt
+            
+            avg_relocate_percentage = round(avg_relocate / total * 100,4)
+            avg_2_opt_percentage = round(avg_2_opt / total * 100,4)
+
+        with open(file_name, "a", newline="") as file:
+            csv.writer(file).writerow([size_tabu, nb_iteration, avg_fitness, min_fitness, max_fitness, avg_iteration, min_iteration, max_iteration, avg_relocate_percentage, avg_2_opt_percentage])
+
 '''
 vrptw = VRPTW('data101_short.vrp')
 vrptw.routes = random_solution(vrptw)
@@ -318,3 +397,4 @@ tabu =tabu_search(vrptw)
 print(tabu[1])
 vrptw = tabu[0]
 display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes, False, False)
+'''

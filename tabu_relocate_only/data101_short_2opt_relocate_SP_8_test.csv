@@ -1,0 +1,2 @@
+size_tabu,nb_iteration,avg,min,max,avg_iteration,min_iteration,max_iteration,avg_relocate (%),avg_2_opt (%)
+4,1,910.7412905626634,842.8245518472585,1005.2141054138507,1.0,1,1,100.0,0.0
