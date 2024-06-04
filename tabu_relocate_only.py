@@ -20,7 +20,6 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
     global unselected_action
     global result_true
     global result_false
-    print("\n\n\n")
     method_used = {
     # "3opt" : 0,
     "2opt" : 0,
@@ -118,8 +117,10 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             not_best += 1
         # if not_best >= SIZE_TABU: # to remove ?
         #     break
-        hash = current_x.str_hash()
-        if sch_detect and (current_x.str_hash(), str(tabu)) in already_explored.items():
+        
+        hash = current_x.str_hash() #f_current_x#
+        if sch_detect and (hash, str(tabu)) in already_explored.items():
+            # break
             if not detected:
                 # print("boucle détectée")
                 # colors.pop()
@@ -127,17 +128,19 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
                 color = 'blue'
                 break
             detected = True
+
             # break
             # essayer sans le break pour voir si c'est bien au bon moment qu'on casse la boucle
         if(len(tabu) == size_tabu):
             already_explored[hash] = str(tabu)
 
-        if(len(already_explored) > size_tabu):
-            del already_explored[next(iter(already_explored))]
-       
-        for key, value in already_explored.items():
-            print("\n")
-            print(key, value)
+        # todo : uncomment en dessous ?
+        # if(len(already_explored) > size_tabu):
+        #     del already_explored[next(iter(already_explored))]
+               
+        # for key, value in already_explored.items():
+        #     print("\n")
+        #     print(key, value)
         # print(tabu)
         previous_x = current_x
 
@@ -319,23 +322,63 @@ def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
     return best_neighbor, best_f, best_action
 
 
-SAME_PARAMETERS = 2
-file_name = "./tabu_relocate_only/test_101_short.csv"
-with open(file_name, "w", newline="") as file:
-    csv.writer(file).writerow(["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_relocate (%)", "avg_2_opt (%)"])
+SAME_PARAMETERS = 4
+
+# nb_iteration_list = [0, 40, 160]
+# size_tabu_list = [0,4,16]
 
 size_tabu_list = [0,4,16,64]
 nb_iteration_list = [0, 40, 160, 640]
-# todo : uncomment above
 
 # size_tabu_list = [0,4]
 # nb_iteration_list = [10,20]
  
-# file_list = ["data101_short.vrp"]
+file_list = ["data101_short", "data102_short", "data111_short", "data112_short", "data201_short", "data202_short", "data1101_short", "data1102_short", "data1201_short", "data1202_short"]
 # for file in file_list
-for size_tabu in size_tabu_list:
-    for nb_iteration in nb_iteration_list:
-        print(f"\nstart size_tabu : {size_tabu}, nb_iteration {nb_iteration}\n")
+
+aimed_size_csv = len(size_tabu_list) * len(nb_iteration_list) + 1
+columns = ["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_truck_removed" ,"avg_truck", "min_truck","max_truck","avg_relocate (%)", "avg_2_opt (%)"]
+for file in file_list:
+    start_of_this_file = time.time()
+    print(f"start file {file}")
+    file_name = "./tabu_final/output_"+file+".csv"
+    # START
+    params = []
+    for size_tabu in size_tabu_list:
+        for nb_iteration in nb_iteration_list:
+            params.append((size_tabu, nb_iteration))
+    last_line = None
+    try:
+        with open(file_name, "r", newline="") as f:
+            lines = f.readlines()
+            nb_lines = len(lines)
+            if nb_lines == aimed_size_csv:
+                continue
+            if nb_lines >= 2:
+                last_line = lines[-1]
+    except Exception:
+        pass
+    if not last_line:
+        with open(file_name, "w", newline="") as f:
+            csv.writer(f).writerow(columns)
+
+    if last_line:
+        split_line = last_line.split(",")
+        last_size_tabu = int(split_line[0])
+        last_nb_iteration = int(split_line[1])
+        last_dones = (last_size_tabu, last_nb_iteration)
+        '''
+        size_tabu_list_for_this_file = size_tabu_list[size_tabu_list.index(last_size_tabu):]
+        nb_iteration_list_for_this_file = nb_iteration_list[nb_iteration_list.index(last_nb_iteration)+1:]
+        '''    
+        try:
+            params = params[params.index(last_dones) + 1:]
+        except ValueError:
+            pass
+    # END
+    for size_tabu, nb_iteration in params:
+    
+        print(f"start size_tabu : {size_tabu}, nb_iteration {nb_iteration}")
         
         sum_fitness = 0
         min_fitness = None
@@ -351,18 +394,33 @@ for size_tabu in size_tabu_list:
         sum_duration = 0
         min_duration = None
         max_duration = None
+
+        sum_truck = 0
+        min_truck = None
+        max_truck = None
+
+        sum_truck_removed = 0
+
         for i in range(SAME_PARAMETERS):
-            vrptw = VRPTW('data101_short.vrp')
+            vrptw = VRPTW(file+'.vrp')
             vrptw.routes = random_solution(vrptw)
             cp_routes = copy.deepcopy(vrptw.routes)
             begin = time.time()
-            s,f,j, method_used = tabu_search(vrptw, size_tabu, nb_iteration, False)
+            s,f,j, method_used = tabu_search(vrptw, size_tabu, nb_iteration)
             duration = time.time() - begin
+            nb_truck = len(s.routes)
+            sum_truck_removed += len(cp_routes) - nb_truck
             sum_fitness += f
             sum_iteration += j
             sum_duration += duration
             sum_relocate += method_used['relocate']
             sum_2_opt += method_used['2opt']
+            sum_truck += nb_truck
+
+            if min_truck == None or nb_truck < min_truck:
+                min_truck = nb_truck
+            if max_truck == None or nb_truck > max_truck:
+                max_truck = nb_truck
 
             if min_duration == None or duration < min_duration:
                 min_duration = duration
@@ -378,11 +436,13 @@ for size_tabu in size_tabu_list:
                 min_iteration = j
             if max_iteration == None or j > max_iteration:
                 max_iteration = j
-             
+            
         avg_fitness = sum_fitness/SAME_PARAMETERS
         avg_iteration = sum_iteration/SAME_PARAMETERS
         avg_duration = sum_duration/SAME_PARAMETERS
-        
+        avg_truck = sum_truck/SAME_PARAMETERS
+        avg_truck_removed = sum_truck_removed/SAME_PARAMETERS
+
         avg_relocate_percentage = 0
         avg_2_opt_percentage = 0
 
@@ -395,9 +455,38 @@ for size_tabu in size_tabu_list:
             avg_relocate_percentage = round(avg_relocate / total * 100,4)
             avg_2_opt_percentage = round(avg_2_opt / total * 100,4)
 
-        with open(file_name, "a", newline="") as file:
-            csv.writer(file).writerow([size_tabu, nb_iteration, avg_fitness, min_fitness, max_fitness, avg_iteration, min_iteration, max_iteration, avg_duration, min_duration, max_duration, avg_relocate_percentage, avg_2_opt_percentage])
+        with open(file_name, "a", newline="") as f:
+            csv.writer(f).writerow([size_tabu, nb_iteration, avg_fitness, min_fitness, max_fitness, avg_iteration, min_iteration, max_iteration, avg_duration, min_duration, max_duration, avg_truck_removed, avg_truck, min_truck, max_truck, avg_relocate_percentage, avg_2_opt_percentage])
+    print(time.time()-start_of_this_file)
 
+def is_float(string):
+    try:
+        float(string)
+        return True
+    except ValueError:
+        return False
+    
+# moyenne de tous les fichiers
+files_content = []
+number_of_file = len(file_list)
+for file in file_list:
+    file_name = "./tabu_relocate_only/output_"+file+".csv"
+    with open(file_name, "r", newline="") as f:
+        lines = f.read().splitlines()
+    
+    lines = [line.split(",") for line in lines]
+    files_content.append(lines)
+    with open("./tabu_relocate_only/moyenne.csv", "w", newline="") as f:
+        for line in range(aimed_size_csv):
+            for column in range(len(columns)):
+                if column < 2 or not is_float(files_content[0][line][column]):
+                    f.write(str(files_content[0][line][column]) + ",")
+                else:
+                    sum = 0
+                    for file_data in files_content:
+                        sum += float(file_data[line][column])
+                    f.write(str(sum/number_of_file) + ",")
+            f.write("\r\n")
 '''
 vrptw = VRPTW('data101_short.vrp')
 vrptw.routes = random_solution(vrptw)
