@@ -322,7 +322,7 @@ def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
     return best_neighbor, best_f, best_action
 
 
-SAME_PARAMETERS = 4
+SAME_PARAMETERS = 1
 
 # nb_iteration_list = [0, 40, 160]
 # size_tabu_list = [0,4,16]
