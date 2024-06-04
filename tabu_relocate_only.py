@@ -7,6 +7,7 @@ from random_solution import random_solution
 from printer.printer import display_vrp
 import matplotlib.pyplot as plt
 import csv
+import time
 
 SIZE_TABU = 20
 ITERATION_NUMBER = 200
@@ -133,7 +134,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
 
         if(len(already_explored) > size_tabu):
             del already_explored[next(iter(already_explored))]
-        print(len(already_explored))
+       
         for key, value in already_explored.items():
             print("\n")
             print(key, value)
@@ -159,8 +160,6 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
     plt.scatter(x,y, c=colors, s=size)
     plt.show()
     '''
-    plt.scatter(x,y, c=colors, s=size)
-    plt.show()
     return x_min, f_min, j, method_used
 
 def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
@@ -320,17 +319,17 @@ def get_neighborhood_without_tabu_list_opt2(vrptw : VRPTW, tabu):
     return best_neighbor, best_f, best_action
 
 
-SAME_PARAMETERS = 1
+SAME_PARAMETERS = 2
 file_name = "./tabu_relocate_only/test_101_short.csv"
 with open(file_name, "w", newline="") as file:
-    csv.writer(file).writerow(["size_tabu", "nb_iteration", "avg", "min", "max", "avg_iteration", "min_iteration", "max_iteration", "avg_relocate (%)", "avg_2_opt (%)"])
+    csv.writer(file).writerow(["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_relocate (%)", "avg_2_opt (%)"])
 
-# size_tabu_list = [0,4,16,64]
-# nb_iteration_list = [0, 40, 160, 640]
+size_tabu_list = [0,4,16,64]
+nb_iteration_list = [0, 40, 160, 640]
 # todo : uncomment above
 
-size_tabu_list = [8]
-nb_iteration_list = [300]
+# size_tabu_list = [0,4]
+# nb_iteration_list = [10,20]
  
 # file_list = ["data101_short.vrp"]
 # for file in file_list
@@ -348,17 +347,27 @@ for size_tabu in size_tabu_list:
 
         sum_relocate = 0
         sum_2_opt = 0
+
+        sum_duration = 0
+        min_duration = None
+        max_duration = None
         for i in range(SAME_PARAMETERS):
             vrptw = VRPTW('data101_short.vrp')
             vrptw.routes = random_solution(vrptw)
             cp_routes = copy.deepcopy(vrptw.routes)
+            begin = time.time()
             s,f,j, method_used = tabu_search(vrptw, size_tabu, nb_iteration, False)
-            
+            duration = time.time() - begin
             sum_fitness += f
             sum_iteration += j
-
+            sum_duration += duration
             sum_relocate += method_used['relocate']
             sum_2_opt += method_used['2opt']
+
+            if min_duration == None or duration < min_duration:
+                min_duration = duration
+            if max_duration == None or duration > max_duration:
+                max_duration = duration
 
             if min_fitness == None or f < min_fitness:
                 min_fitness = f
@@ -372,7 +381,7 @@ for size_tabu in size_tabu_list:
              
         avg_fitness = sum_fitness/SAME_PARAMETERS
         avg_iteration = sum_iteration/SAME_PARAMETERS
-
+        avg_duration = sum_duration/SAME_PARAMETERS
         
         avg_relocate_percentage = 0
         avg_2_opt_percentage = 0
@@ -387,7 +396,7 @@ for size_tabu in size_tabu_list:
             avg_2_opt_percentage = round(avg_2_opt / total * 100,4)
 
         with open(file_name, "a", newline="") as file:
-            csv.writer(file).writerow([size_tabu, nb_iteration, avg_fitness, min_fitness, max_fitness, avg_iteration, min_iteration, max_iteration, avg_relocate_percentage, avg_2_opt_percentage])
+            csv.writer(file).writerow([size_tabu, nb_iteration, avg_fitness, min_fitness, max_fitness, avg_iteration, min_iteration, max_iteration, avg_duration, min_duration, max_duration, avg_relocate_percentage, avg_2_opt_percentage])
 
 '''
 vrptw = VRPTW('data101_short.vrp')
