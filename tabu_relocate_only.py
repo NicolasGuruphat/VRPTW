@@ -333,7 +333,7 @@ nb_iteration_list = [0, 40, 160, 640]
 # size_tabu_list = [0,4]
 # nb_iteration_list = [10,20]
  
-file_list = ["data101_short", "data102_short", "data111_short", "data112_short", "data201_short", "data202_short", "data1101_short", "data1102_short", "data1201_short", "data1202_short"]
+file_list = ["data1201", "data1202"]
 # for file in file_list
 
 aimed_size_csv = len(size_tabu_list) * len(nb_iteration_list) + 1
