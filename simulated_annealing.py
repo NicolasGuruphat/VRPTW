@@ -51,6 +51,7 @@ OPT_MAP = {
     }
 }
 
+fitnesses = []
 BEST_AT = [0]
 
 def get_random_neighbor(vrptw: VRPTW, opt = ALLOWED_OPERATORS) -> VRPTW:
@@ -134,6 +135,7 @@ def get_random_neighbor(vrptw: VRPTW, opt = ALLOWED_OPERATORS) -> VRPTW:
 
 def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = None, n2_param: int = None, t_final: float = 0.001, **kwargs: dict) -> VRPTW:
     BEST_AT[0] = 0
+    global fitnesses
 
     opt_to_use = {relocate_delivery:0,switch_two_deliveries:0,exchange_route_chunk:0} if kwargs.get("opt") == "RSE" else {relocate_delivery:0,switch_two_deliveries:0}
 
@@ -195,6 +197,10 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
     print(f"MU {mu}")
     print(f"DF {delta_f}")
 
+    fitnesses = []
+
+    fitnesses.append(f_current)
+
     for k in range(int(n1)):
         print(f"{k}/{int(n1)}")
         no_upgrade = 0
@@ -229,12 +235,16 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
             if time.time() - begin >= 180:
                 with open("./100_first_101_tw/logs.csv", "a", newline="") as file:
                     file.write(f"Timeout {k} / {n1}; {l} {mu} {t_k}\n")
+                    fitnesses.append(f_current)
                     break
+
+            fitnesses.append(f_current)
         t_k *= mu
         mu *= 0.95
         print(f"Meilleur {f_min}")
         if no_upgrade >= n_no_upgrade_max:
             continue
+
     return (x_min, mu, t_0, n1) if kwargs.get("return_mu") else x_min
 
 # VRPTW_ = VRPTW('data101 short.vrp')
@@ -246,7 +256,7 @@ mus = [mus_full[5]]
 
 files = [
     "101",
-    "101 short",
+    # "101 short",
     # "102",
     # "102 short",
     # "111",
@@ -272,14 +282,14 @@ if SIM:
         VRPTW_ = VRPTW(f'data{data_file}.vrp')
         last_line = None
         try:
-            with open(f"./100_first_101/sim_{data_file}.csv", "r", newline="") as file:
+            with open(f"./no_matter/sim_{data_file}.csv", "r", newline="") as file:
                 lines = file.readlines()
                 if len(lines) >= 2:
                     last_line = lines[-1]
         except Exception:
             pass
         if not last_line:
-            with open(f"./100_first_101/sim_{data_file}.csv", "w", newline="") as file:
+            with open(f"./no_matter/sim_{data_file}.csv", "w", newline="") as file:
                 csv.writer(file).writerow(["AVG_MU", "MIN_MU", "MAX_MU", "OPT_USED", "N2", "AVG_T0", "MIN_T0", "MAX_T0", "F0", "F_AVG", "F_MIN", "F_MAX", "AVG_BEST_AT", "MIN_BEST_AT", "MAX_BEST_AT", "INIT_NB_TRUCKS", "AVG_NB_TRUCKS", "MIN_NB_TRUCKS", "MAX_NB_TRUCKS", "AVG_EXEC_T", "MIN_EXEC_T", "MAX_EXEC_T","AVG_N1", "MIN_N1", "MAX_N1", "WAY"])
 
         params = list()
@@ -287,9 +297,9 @@ if SIM:
         opt_used = ["RS"]
         # opt_used = ["RS", "RSE"]
         # opt_used = ["R", "RS", "RE", "RSE", "RI", "RISE"]
-        n2s = [10000]
+        n2s = [1000]
         # n2s = [10000, 1000]
-        way_to_get_n1 = ["SQRT"]
+        way_to_get_n1 = ["10SQRT"]
         # way_to_get_n1 = ["SQRT", "LN", "2SQRT", "2LN"]
         t_n1s = [0.86]
         # t_n1s = [0.86]
@@ -332,7 +342,7 @@ if SIM:
             computed_mus = list()
             t_0s = list()
             n_1s = list()
-            for _ in range(5):
+            for i in range(1):
                 try:
                     begin = time.time_ns()
                     vrptw, computed_mu, computed_t0, computed_n1 = simulated_annealing(VRPTW_, n2_param=n2, t_final=t_n1, **{"opt": opt, "way": way, "return_mu": True})
@@ -343,7 +353,10 @@ if SIM:
                     fs.append(fitness(vrptw))
                     best_ats.append(BEST_AT[0])
                     trucks.append(len(vrptw.routes))
-                    exec_times.append(end - begin)
+                    exec_times.append(ex := end - begin)
+
+                    with open("./fitness_evolution/evolution.json", "a") as evo_file:
+                        evo_file.write(f'"{"c" if way == "SQRT" else "g"}{i}": ' + "{" + f'"f" : {fitnesses}, "e": {ex}' + "},")
                 except Exception as e:
                     print(e)
                     continue
@@ -376,7 +389,7 @@ if SIM:
             min_exec_t = min(exec_times)
             max_exec_t = max(exec_times)
 
-            with open(f"./100_first_101/sim_{data_file}.csv", "a", newline="") as file:
+            with open(f"./no_matter/sim_{data_file}.csv", "a", newline="") as file:
                 csv.writer(file).writerow([mu_avg, mu_min, mu_max, opt, n2, t0_avg, t0_min, t0_max, f0, f_avg, f_min, f_max, avg_best_at, min_best_at, max_best_at, init_nb_trucks, avg_nb_trucks, min_nb_trucks, max_nb_trucks, avg_exec_t, min_exec_t, max_exec_t, n1_avg, n1_min, n1_max, way])
 
 
