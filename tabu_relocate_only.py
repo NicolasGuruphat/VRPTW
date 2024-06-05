@@ -339,6 +339,7 @@ file_list = ["data101_short", "data102_short", "data111_short", "data112_short",
 aimed_size_csv = len(size_tabu_list) * len(nb_iteration_list) + 1
 columns = ["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_truck_removed" ,"avg_truck", "min_truck","max_truck","avg_relocate (%)", "avg_2_opt (%)"]
 for file in file_list:
+    break
     start_of_this_file = time.time()
     print(f"start file {file}")
     file_name = "./tabu_final/output_"+file+".csv"
@@ -470,23 +471,24 @@ def is_float(string):
 files_content = []
 number_of_file = len(file_list)
 for file in file_list:
-    file_name = "./tabu_relocate_only/output_"+file+".csv"
+    file_name = "./tabu_final/output_"+file+".csv"
     with open(file_name, "r", newline="") as f:
         lines = f.read().splitlines()
-    
+    print(file_list)
     lines = [line.split(",") for line in lines]
     files_content.append(lines)
-    with open("./tabu_relocate_only/moyenne.csv", "w", newline="") as f:
-        for line in range(aimed_size_csv):
-            for column in range(len(columns)):
-                if column < 2 or not is_float(files_content[0][line][column]):
-                    f.write(str(files_content[0][line][column]) + ",")
-                else:
-                    sum = 0
-                    for file_data in files_content:
-                        sum += float(file_data[line][column])
-                    f.write(str(sum/number_of_file) + ",")
-            f.write("\r\n")
+with open("./tabu_final/moyenne.csv", "w", newline="") as f:
+    for line in range(aimed_size_csv):
+        for column in range(len(columns)):
+            print(line, column)
+            if column < 2 or not is_float(files_content[0][line][column]):
+                f.write(str(files_content[0][line][column]) + ",")
+            else:
+                sum = 0
+                for file_data in files_content:
+                    sum += float(file_data[line][column])
+                f.write(str(sum/number_of_file) + ",")
+        f.write("\r\n")
 '''
 vrptw = VRPTW('data101_short.vrp')
 vrptw.routes = random_solution(vrptw)
