@@ -4,10 +4,6 @@
 
 Nombre d'itération : [0, ...]
 Taille de la liste : [ ... ]
-pourquoi relocate et 2 opt :
-
-+  relocate car il faut pouvoir enlever des routes et que c'est celui qui s'est montré le plus efficace dans le recuit
-+  2-opt car il est cohérent avec les time windows (pas beaucoup de possibilité et des possibilités qui renvoient souvent true, donc ça évite pleins de calculs pour rien)
 
 L'analyse se base principalement sur le fichier moyenne des 30 premiers
 Ce fichier contient ... **TODO**
@@ -15,8 +11,25 @@ Nous avons choisi d'analyser ce fichier plutot que celui des 100 clients pour pl
 
 ## Choix des opérateurs 
 
-Il ne faut pas que les opérateurs se superposent
-Besoin d'un opérateur qui permet de supprimer un camion : le relocate
+Pour réaliser cet algorithme, nous avons décider d'utiliser les opérateurs 2-opt et relocate. Ce choix des opérateurs doit être bien réalisé pour que l'algorithme fonctionne correctement. 
+
+### Supperposition
+D'abord, il ne faut pas que deux opérateurs se superposent. En effet, si deux opérateurs peuvent donner une même solution à partir d'une solution idéale, alors la liste tabou ne pourra pas repérer que cette solution a déjà été exploitée. Ainsi, si les opérateurs sont mal choisi, l'algorithme se retrouvera dans des boucles beaucoup plus rapidement
+
+### Choix final
+
+Au final, nous avons choisi d'utiliser le relocate et le 2-opt.  
+
+#### Relocate
+
+Notre choix c'est porté sur le relocate car c'est celui qui s'est révélé le plus efficace dans le recuit. De puis, c'est un opérateur qui permet de supprimer des routes, ce qui est important pour atteindre les meilleurs optimaux.  
+
+#### 2-opt
+Nous avons choisi le 2-opt pour une autre raison : sa cohérence avec le time windows. En effet, bon nombre d'opérateur ne sont pas pertinent dans ce cas, car il donneront énormément de résultat invalide. Par exemple, inverser tout l'ordre de la route sera dans la quasi totalité des cas impossible en respectant les time windows. Le 2-opt, quant à lui, est très cohérent car il échanges deux clients proche, ce qui a de grande chance de fonctionner. De plus, il ne génère pas énormement de voisin, ce qui permet d'optimiser les temps de calcul
+
+### Un autre bon candidat : le 3-opt
+
+Nous avons également développé l'opérateur 3-opt, qui fait la même chose que le 2-opt en rajoutant un client entre les deux qui sont inversés. Cet opérateur était un bon candidat pour les mêmes raisons que le 2 opt, mais s'avère moins efficace car il génère plus de solution incompatible avec les time window
 
 ## Détection de schéma
 
@@ -35,21 +48,32 @@ Cette fonctionnalité nous a ammené à la métrique suivante : le nombre d'ité
 #### Analyse sur les version short (30 premiers clients)
 
 Nous pouvons remarqué un fait intéressant sur cette donnée. Prennons par exemple le fichier output_data101_short.csv. Dans ce fichier, nous remarquons d'abord que pour le hill climbing (càd taille tabu = 0), le nombre de ligne effective est globalement toujours le même, et toujours inférieur au nombre d'itération prévu (environ 18 itérations réels). Cela est assez simplement interpretable : le hill climbing converge toujours en un nombre d'itération similaire sur ce jeu de données. Ainsi, nous pouvons déduire que le bon hyperparamètre pour le hill climbing est de 18 itérations.
-TODO : il faudrait plutot analyser le fichier de moyenne pour cela
+**TODO : il faudrait plutot analyser le fichier de moyenne pour cela**
 
 Pour revenir au tabou,
 ![alt text](evol_iter_reel.png)
 
+**TODO**
 ## Choix des hyper-parametres
 
-### Quels hyper paramètres tester ?
+### Hyper paramètres particuliers
 
-on fait 0 itération pour voir la fitness moyenne
-on faire 0 tabu pour avoir les données du hill climbing
+Nous avons séléctiooné deux valeur d'hyperparamètre pour des raisons particulières
+
+#### 0 itérations
+
+D'abord, nous avons choisi d'utiliser le paramètre 0 itérations. Ce choix est motivé par deux raisons :
+- d'abord, il nous permettra de voir la fitness donné par la solution aléatoire. Cela nous donnera un ordre d'idée du fichier sur lequel nous travaillons
+- ensuite, il permet de poser une base pour la matrice de corrélation. En effet, il permet de rajouter une valeur d'analyse permettant d'établir des corrélations sans devoir faire de calcul particulier. Ce choix est ainsi très interessant dans notre contexte où les données sont précieuses
+
+#### 0 place dans la liste tabou
+
+Nous avons également choisi d'inclure le paramètre de 0 pour la taille de la liste tabou. Ce paramètre peu sembler déconcertant, car il enlève tout le principe de cet algorithme, mais c'est justement ce que nous voulions faire. En effet, si nous plaçons la taille de la liste à 0, alors nous effectuons l'algorithme hill climbing. Grâce à cette valeur, nous pourrons ainsi comparer l'algorithme hill climbing et le tabou.  
+De même que pour la partie précedente, il permet également de poser une base pour les corrélations
 
 ### Choix de la métrique
 
-Pour le tabou, nous avons deux hyper-paramètres à séléctionner : la taille de la liste et le nombre d'itération visé. Pour trouver les hyper-paramètres les plus adapatés, il faut ainsi voir le couple qui donne les meilleur résultat en terme de fitness. Cependant, nous pouvons voir dans l'annexe 1 (**TODO : créer annexe 1, càd le fichier moyenne pour les tilles 30**) que, pour 30 éléments, la fitness avec les paramètres (16, 40) et (16, 160) donne des fitness moyenne très proche, mais que le deuxième couple prend beaucoup plus de temps à calculer. Ainsi, pour évaluer la qualité d'une solution, nous allons également mettre en jeu cette metrique de temps en faisant un ratio : 
+Comme vu précedemment, nous avons deux hyper-paramètres à séléctionner : la taille de la liste et le nombre d'itération visé. Pour trouver les hyper-paramètres les plus adapatés, il faut ainsi voir le couple qui donne les meilleur résultat en terme de fitness. Cependant, nous pouvons voir dans l'annexe 1 (**TODO : créer annexe 1, càd le fichier moyenne pour les tilles 30**) que, pour 30 éléments, la fitness avec les paramètres (16, 40) et (16, 160) donne des fitness moyenne très proche, mais que le deuxième couple prend beaucoup plus de temps à calculer. Ainsi, pour évaluer la qualité d'une solution, nous allons également mettre en jeu cette metrique de temps en faisant un ratio : 
 
 $$
 q=\frac{1}{f \times 2 + d} \times 1000000
@@ -108,15 +132,14 @@ Nous pouvons ensuite voir un lien fort (mais toutefois moins que celui précedem
 
 Comme dit précedement, le choix des hyper-paramètres (0, x) nous permettent d'avoir les résultat du hill climbing. Ainsi, nous allons comparer ces résultats avec ceux du tabou afin de voir si la mise en place d'une liste tabou à un impact notable.
 
-### IP/IR
-
-**TODO**
-
 ### Qualité
 
-Nous allons réutiliser notre ratio précedent afin de comparer les qualités pour le même nombre d'IP
+Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe quality.csv **ajouter annexe** que la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
+**graphe évolution qualité hill climbing**
 
-**TODO**
+La meilleure qualité est de 802. Pour le tabu, nous voyons des résultats plus disparatre de qualité. Nous voyons bien l'importance de la notion de temps dans la formule, car les score de qualité ne sont pas beaucoup plus élevé que pour le hill climbing. Le score maximum, comme vu précedemment, est de 830. Toutefois, si on ne regard e que la fitness, les score sont beaucoup plus avantageux en faveur du tabou, avec une meilleure fitness à 578 contre 617 pour le hill climbing.  
+
+Ainsi, la méthode tabu est plus avantagueuse que le hill climbing sur le plan de la fitness. Toutefois, le temps passé à faire tourner l'algo peut faire pencher la balance du côté du hillclimbing si les ressources et le temps disponible ne sont pas très élevés
 
 ## Limites du tabou
 
@@ -150,4 +173,4 @@ regarder les anciens rapports d'autres élèves
 
 si la taille de la tabu est trop grande, on ne trouve plus d'action possible
 
-choix de mettre 0 itération car ça pose une base pour la matrice de corrélation
+**mettre dans les annexes le fichier quality.csv**
