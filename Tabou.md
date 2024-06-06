@@ -1,5 +1,18 @@
 # Tabou
  
+## Avant propos
+
+Nombre d'itération : [0, ...]
+Taille de la liste : [ ... ]
+pourquoi relocate et 2 opt :
+
++  relocate car il faut pouvoir enlever des routes et que c'est celui qui s'est montré le plus efficace dans le recuit
++  2-opt car il est cohérent avec les time windows (pas beaucoup de possibilité et des possibilités qui renvoient souvent true, donc ça évite pleins de calculs pour rien)
+
+L'analyse se base principalement sur le fichier moyenne des 30 premiers
+Ce fichier contient ... **TODO**
+Nous avons choisi d'analyser ce fichier plutot que celui des 100 clients pour plusieurs raison. D'abord, la quantité des données est bien supérieure. En effet, utiliser seulement les 30 premiers clients nous a permi de faire tourner 4 simulations pour chaque couple d'hyperparamètres. Ce point là est très important, car le résultat, particulièrement quand il y a peu d'itération ou bien beaucoup de camion, est très influencé par la solution aléatoire de départ. Ainsi, il est nécessaire de faire plusieurs simulations afin de lisser l'effet de l'aléatoire (bien que 4 soit assez peu, il est toujours préférable à l'unique solution trouvée pour les fichiers complet). Ensuite, les hyperparamètres choisi sont plus adaptés. En effet, les choix des hyperparamètres que nous allions utiliser a été réalisée suite à une réflexion sur les premiers résultats. Or, ces premiers résultats ont été générés à partir des données des 30 premiers clients. Pour adapter les itérateurs 
+
 ## Choix des opérateurs 
 
 Il ne faut pas que les opérateurs se superposent
@@ -56,13 +69,40 @@ Avec ce calcul, nous pouvons voir que la qualité des hyperparamètres (16, 40) 
 Nous pouvons donc interpréter les résultat comme cela : si la fitness est 8 fois plus important que le temps d'exécution, alors le couple (16, 160) est plus intéressant. Dans le cas contraire, nous choisirons plutot le couple (16, 40)
 **faire aussi pour le couple 64,640, et même peut être automatiser**
 
-## Analyse des choix d'opérateurs
+## Analyse des utilisation des opérateurs
 
-Comme dit précedement, nous avons décider d'utiliser les opérateur relocate et 2-opt. Ainsi, une métrique intéressante est la proportion de choix de chacun de ces opérateurs. Nous pouvons ainsi observer une évolution de la proportion de 2opt en fonction du nombre d'IP et de la taille de la liste 
+Comme dit précedement, nous avons décider d'utiliser les opérateur relocate et 2-opt. Ainsi, une métrique intéressante est la proportion de choix de chacun de ces opérateurs. 
+En regardant la matrice de corélation, nous pouvons observé un fort lien entre la proportion de 2 opt et le nombre d'IR et d'IP (0.48 et 0.86)
+Nous pouvons ainsi observer une évolution de la proportion de 2opt en fonction du nombre d'IP et de la taille de la liste 
 **graphique evolution en fonction de la taille**
 **graphique evolution en fonction de l'IP**
 **potentiellement un seul graphe avec 4 courbes (3 courbes en fait, car on ne prend pas le hill climbing)**
 pourquoi quand on augmente la taille de la liste on a plus de pourcentage de 2opt : théorie, parce que les bonnes solutions du relocate sont dans la liste, donc impossible de les séléctionner. Cela se confirme si nous regardons le graphique de l'évolution en fonction de la taille. En effet, nous voyons que pour un même nombre d'itération, la proportion de 2-opt est plus grande. Ainsi, nous pouvons penser que toutes les bonnes solutions de relocate ont été séléctionnées et mise dans la liste, laissant plus de place au deuxième opérateur
+
+### Lien entre les choix d'opérateurs et les autres variables
+
+#### Lien avec le nombre de camion
+
+Dans la matrice de correlation, nous pouvons également voir que le choix de l'opérateur relocate est très fortement corrélé avec le nombre de camion enlevé (0.96). 
+Cette correlation est logique, le relocate étant le seul opérateur pouvant enlevé un camion.  
+
+#### Lien avec l'exploration
+
+Une autre relation très marquée est celle entre le choix de l'opérateur relocate et la fitness. En effet, nous pouvont voir une relation corellé dans le négatif (-0.97). Ainsi, quand la proportion de relocate augmente, la fitness diminue. Cette corelation est liée à celle interprétée dans la partie précendente. En effet, la proportion de relocate diminue lorsque celle de 2-opt augmente. Or, la proportion de 2-opt augmente lorsque l'algorithme à le temps et la place de mettre les très bons voisins dans la liste. Ainsi, la proportion de 2-opt reflète le niveau d'exploration qui a été réalisé. Logiquement, plus l'exploration augmente, plus il y a d'opportunité de trouver une solution possédant une bonne fitness. Cette hypothèse se confirme grâce à une autre corrélation : celle entre la durée moyenne et la proportion de 2-opt (0.86). En effet, une durée plus haute nous indique une exploration plus profonde.
+
+## Analyse de la fitness
+
+Nous allons maintenant voir quels variables sont en lien avec la fitness de la solution finale
+
+### Lien avec le nombre de camion
+
+Nous pouvons d'abord constaté un lien très fort entre le nombre de camion de la solution finale et sa fitness (-0.99). En parallèle, nous pouvons également voir la même relation entre le nombre de camion enlevées et la fitness (0.99). Cette relation s'explique intuitivement par le fait que les meilleurs solutions ont en générale moins de camion que les solutions aléatoirement générées.
+**mettre graphique**
+
+### Lien avec le nombre d'IR
+
+Nous pouvons ensuite voir un lien fort (mais toutefois moins que celui précedemment évoqué) entre la fitness et le nombre d'IR (-0.48). Ce lien nous montre que plus on réalise d'itération, moins la fitness sera haute (et donc meilleure sera la solution). Encore une fois, ce résultat est assez intuitif et ne nécessite pas une plus grande analyse.
+**mettre graphique**
 
 ## Comparaison tabou / hill climbing
 
@@ -80,25 +120,29 @@ Nous allons réutiliser notre ratio précedent afin de comparer les qualités po
 
 ## Limites du tabou
 
-Croissance exponentielle (mettre calcul et graph)
+La principale limite de l'algorithme tabou est la quantité de voisin à générer. En effet, à chaque itération, tous les voisins possibles avec les opérateurs choisi sont générés.  
+Croissance exponentielle (mettre calcul et graph)  
+Cette croissance liée au nombre peut nous pousser à limiter les opérateurs afin de limiter le nombre de voisin. De plus, une autre limite est le choix des opérateurs. En effet, comme vu précédemment, il n'est pas possible de choisir deux opérateurs qui ont une intersections non-nulles  **voir si ça a été expliqué avant et, sinon, l'expliquer**  
+Une autre limite du tabou est la vision court terme. En effet, la décision de la solution choisi se base exclusivement sur sa fitness. Or, il serait pertinent que le choix se base plutot sur la potentielle fitness que cette solution apportera dans le futur. Ce manque de vision long terme se reflète à travers le nombre de camion. En effet, nous avons remarqué que l'algorithme trouvait parfois des solutions non optimales et si retrouvait bloqué. Dans les fichiers de 30 éléments, nous avons par exemple remarqué qu'il s'arretait parfois alors qu'il restait un camion en trop par rapport à la solution optimale. La solution avec le camion en trop possédait une très bonne fitness, mais il était parfois impossible de sortir de ce minimum local et d'explorer jusqu'à enlever la route en trop. Nous pourrions penser que ce problème est mitigé par la liste, qui permet une certaine exploration. Cela est en partie vrai, mais pas totalement. En effet, il est possible que l'algorithme suive une direction d'exploration complètement opposé à la solution optimale totale (bien qu'une liste plus grande permet une plus grande exploration). 
+## Solutions éventuelles
 
-difficile d'enlever complètement les dernières routes, car il faut voir long terme plutot que de prendre des décisions sur une seule itération (bloquage à 4 routes pour le premier fichier en taille 30)
+## Difficultés rencontrés
+
+Durant le développement de cet algorithme, nous nous somme heurté à de nombreuse difficultés
+
+### Le stockage dans la liste
+
+Notre principale difficulté a été le stockage dans la liste tabou. En effet, dans notre première version, nous stockions l'action que nous venions d'effectuer. Cette interprétation de l'algorithme n'était pas la bonne. En effet, il faut stocker dans la liste l'action qui nous permettrait de revenir à l'état dans lequel nous étions précedemment. Cela c'est révélé assez simple pour le 2-opt, car les actions sont reversibles. Mais la difficulté à résidé dans le relocate. En effet, trouver l'action inverse d'un déplacement d'un client dans une autre route est une tâche plus compliquée. Ne voyant pas comment la réaliser, nous avons commencer le développement de l'algorithme hill climbing et avons décider de nous contenter de celui là. Mais nous avons fini par trouver la solution pour pouvoir implémenter le tabou correctement. 
+**mettre schéma excalidraw**
 
 
-## Matrice
+### Temps de génération
 
-lien entre utilisation du relocate et le nb de camion enlevé (mettre dans partie choix des opérateurs ?)
+Une autre difficulté est apparue lorsqu'il a fallu générer les données. En effet, l'algorithme étant très lent pour les gros jeux de données, et en étant limité par le language python, nous n'avons pas pu effectué toutes les exécutions que nous aurions voulu pour avoir une analyse plus poussée.
+
+
 
 ## Notes à développer
-
-matrice de corrélation : voir ce qu'à fait greg et faire pareil
-
-pourquoi relocate et 2 opt :
-
-+  relocate car il faut pouvoir enlever des routes et que c'est celui qui s'est montré le plus efficace dans le recuit
-+  2-opt car il est cohérent avec les time windows (pas beaucoup de possibilité et des possibilités qui renvoient souvent true, donc ça évite pleins de calculs pour rien)
-
-faire une partie sur les échecs
 
 Mettre les graphes d'évolution de la fitness pour montrer que le tabu marche bien (et monter ce que ça donnait quand ça marchait pas)
 
@@ -106,3 +150,4 @@ regarder les anciens rapports d'autres élèves
 
 si la taille de la tabu est trop grande, on ne trouve plus d'action possible
 
+choix de mettre 0 itération car ça pose une base pour la matrice de corrélation
