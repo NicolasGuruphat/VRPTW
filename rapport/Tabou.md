@@ -2,7 +2,7 @@
  
 ## Avant propos
 
-Les métriques que nous avons calculés pour l'algorithme tabou sont les suivantes :
+Les métriques que nous avons calculées pour l'algorithme tabou sont les suivantes :
 - size_tabu : taille de la liste tabou
 - nb_iteration : le nombre d'itération prévu
 - fitness (avg, min, max)
@@ -13,13 +13,14 @@ Les métriques que nous avons calculés pour l'algorithme tabou sont les suivant
 - avg_relocate (%) : pourcentage d'utilisation de l'opérateur relocate
 - avg_2_opt (%) : pourcentage d'utilisation de l'opérateur 2-opt
 
-
 L'analyse de cette algorithme sera réalisée principalement sur le fichier *moyenne_30.csv*. Ce fichier contient la moyenne de chaqu'une des métrique pour chacun des fichiers d'entrée. Nous avons choisi d'analyser ce fichier plutot que celui des 100 clients pour plusieurs raison. D'abord, la quantité des données est bien supérieure. En effet, utiliser seulement les 30 premiers clients nous a permi de faire tourner 4 simulations pour chaque couple d'hyperparamètres. Ce point là est très important, car le résultat, particulièrement quand il y a peu d'itération ou bien beaucoup de camion, est très influencé par la solution aléatoire de départ. Ainsi, il est nécessaire de faire plusieurs simulations afin de lisser l'effet de l'aléatoire (bien que 4 soit assez peu, il est toujours préférable à 1, qui est le nombre de simulation faite pour les fichiers complets). Ensuite, les hyperparamètres choisi sont plus adaptés. En effet, les choix des hyperparamètres que nous allions utiliser a été réalisée suite à une réflexion sur les premiers résultats. Or, ces premiers résultats ont été générés à partir des données des 30 premiers clients.  
 Les hyperparamètres que nous avons testé sont le produit cartésien de ces deux listes :
 - taille de la liste tabu : [0, 4, 16, 64]
 - nombre d'itération : [0, 40, 160, 640]
 Nous expliquerons dans la suite du rapport le choix de certaines de ces valeurs.
-Nous utiliserons parfois la notation (t, n), où t représente le paramètre taille de la liste et n le paramètre nom d'itération
+Nous utiliserons parfois la notation (t, n), où t représente le paramètre taille de la liste et n le paramètre nom d'itération.
+Lorsque nous parlerons de correlation, le fichier de référence sera `correl.csv`.
+
 ## Choix des opérateurs 
 
 Pour réaliser cet algorithme, nous avons décider d'utiliser les opérateurs 2-opt et relocate. Le choix des opérateurs doit être bien réalisé pour que l'algorithme fonctionne correctement.
@@ -85,7 +86,16 @@ Nous pouvons donc voir que la qualité du couple (4, 160) est la meilleure. Il e
 
 ### Analyse pour les fichiers de 100 éléments
 
-**TODO** 
+Nous avons effectué la même procédure pour les fichiers de 100 éléments, c'est qui nous donne ces trois meilleures couples :
+- (16, 40) : 202.0
+- (0, 40) : 201.0
+- (4, 40) : 197.9
+
+(les qualités des autres couples sont également disponible dans l'annexe *quality_100.csv*)
+
+Nous pouvons ici voir un fort impact du temps d'exécution. En effet, le temps d'exécution pour les fichiers de 100 éléments sont très long, et impact négativement la qualité du couple. 
+
+En changeant le poid de la fitness à 10 au lieu de 2, nous pouvons ainsi voir les solutions avec plus d'itérations remonter dans le classement des score (voir fichier *quality_100_x10.csv*).
 
 ## Détection de schéma
 
@@ -147,8 +157,10 @@ Comme dit précedement, le choix des hyper-paramètres (0, x) nous permettent d'
 
 ### Qualité
 
-Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe *quality.csv* **ajouter annexe** que, pour les couples (0, x) la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
-**graphe évolution qualité hill climbing**
+Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe *quality.csv* que, pour les couples (0, x) la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
+
+![alt text](image-3.png)
+Nous pouvons voir ce phénomène sur ce graphique (qui représente en ordronnée la qualité et en abscisse le nombre d'itération pour le hill climbing)
 
 La meilleure qualité est de 802. 
 
@@ -159,7 +171,7 @@ Ainsi, la méthode tabu est plus avantagueuse que le hill climbing sur le plan d
 ## Limites du tabou
 
 La principale limite de l'algorithme tabou est la quantité de voisin à générer. En effet, à chaque itération, tous les voisins possibles avec les opérateurs choisi sont générés.  
-**Croissance exponentielle (mettre calcul et graph)**
+
 Cette croissance peut nous pousser à limiter les opérateurs afin de limiter le nombre de voisins. 
 De plus, une autre limite est le choix des opérateurs. En effet, comme vu précédemment, il n'est pas possible de choisir deux opérateurs qui ont une intersections non-nulles.  
 
@@ -175,16 +187,7 @@ Durant le développement de cet algorithme, nous nous somme heurté à de nombre
 ### Le stockage dans la liste
 
 Notre principale difficulté a été le stockage dans la liste tabou. En effet, dans notre première version, nous stockions l'action que nous venions d'effectuer. Cette interprétation de l'algorithme n'était pas la bonne. En effet, il faut stocker dans la liste l'action qui nous permettrait de revenir à l'état dans lequel nous étions précedemment. Cela c'est révélé assez simple pour le 2-opt, car les actions sont reversibles. Mais la difficulté à résidé dans le relocate. En effet, trouver l'action inverse d'un déplacement d'un client dans une autre route est une tâche plus compliquée. Ne voyant pas comment la réaliser, nous avons commencer le développement de l'algorithme hill climbing et avons décider de nous contenter de cette méta heuristique. Mais nous avons fini par trouver la solution pour pouvoir implémenter le tabou correctement et avons pu terminer les développements de l'algorithme tabou. 
-**mettre schéma excalidraw**
 
 ### Temps de génération
 
 Une autre difficulté est apparue lorsqu'il a fallu générer les données. En effet, l'algorithme étant très lent pour les gros jeux de données, et en étant limité par le language python, nous n'avons pas pu effectué toutes les exécutions que nous aurions voulu pour avoir une analyse plus poussée (nous aurions pu, si nous avions fait plus d'exécution pour le même couple, analyser les quartiles et la médiane par exemple, au lieu de ce limiter à la moyenne).
-
-## Notes à développer
-
-Mettre les graphes d'évolution de la fitness pour montrer que le tabu marche bien (et monter ce que ça donnait quand ça marchait pas)
-
-si la taille de la tabu est trop grande, on ne trouve plus d'action possible
-
-**mettre dans les annexes le fichier quality.csv, moyenne_30.csv moyenne_100.csv**

@@ -59,12 +59,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             print("pas de solution a proposer")
             break
         action = rollback[0][0]
-        if action == 'relocate':
-            color = "red"
-        elif action == '2opt':
-            color = "green"
-        else:
-            color = "black"
+        color = "blue"
         ''' 
         if len(last_fitnesses) != 0 and f_current_x == last_fitnesses[0]:
             check_pattern += 1
@@ -82,9 +77,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             last_fitnesses.pop(0)
             
         '''
-        x.append(i)
-        y.append(f_current_x)
-        colors.append(color)
+
 
         routes_copy = vrptw.routes.copy()
         vrptw.routes = routes_copy
@@ -107,7 +100,6 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             f_min = f_current_x
             # print(f"new best : {f_current_x} ")
             # colors.append('green')
-            size.append(7)
             not_best = 0
             already_explored = {} # on reset la liste car on est sûr de ne pas être dans un cycle
         else :
@@ -123,17 +115,19 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
             # break
             if not detected:
                 # print("boucle détectée")
-                # colors.pop()
-                # colors.append('blue')
-                color = 'blue'
-                break
+                
+                color='red'
+                # color = 'blue'
+                # break
             detected = True
 
             # break
             # essayer sans le break pour voir si c'est bien au bon moment qu'on casse la boucle
         if(len(tabu) == size_tabu):
             already_explored[hash] = str(tabu)
-
+        colors.append(color)
+        x.append(i)
+        y.append(f_current_x)
         # todo : uncomment en dessous ?
         # if(len(already_explored) > size_tabu):
         #     del already_explored[next(iter(already_explored))]
@@ -160,7 +154,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
     print(method_used)
     print(result_true,result_false)
     # print(method_used)
-    plt.scatter(x,y, c=colors, s=size)
+    plt.scatter(x,y, c=colors)
     plt.show()
     # end here
     print(y)
@@ -331,20 +325,21 @@ SAME_PARAMETERS = 1
 # nb_iteration_list = [0, 40, 160]
 # size_tabu_list = [0,4,16]
 
-size_tabu_list = [16]
-nb_iteration_list = [640]
+size_tabu_list = [4]
+nb_iteration_list = [60]
 
 # size_tabu_list = [0,4]
 # nb_iteration_list = [10,20]
 
-file_list = ["data101"]
-
+# file_list = ["data101", "data102","data112","data201", "data202", "data1101", "data1102","data1201","data1202"]
+file_list = ["data101_short"]
 
 # for file in file_list
 
 aimed_size_csv = len(size_tabu_list) * len(nb_iteration_list) + 1
 columns = ["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_truck_removed" ,"avg_truck", "min_truck","max_truck","avg_relocate (%)", "avg_2_opt (%)"]
 for file in file_list:
+    
     start_of_this_file = time.time()
     print(f"start file {file}")
     file_name = "./tabu_final/output_"+file+"_save.csv"
@@ -353,6 +348,7 @@ for file in file_list:
     for size_tabu in size_tabu_list:
         for nb_iteration in nb_iteration_list:
             params.append((size_tabu, nb_iteration))
+    '''
     last_line = None
     try:
         with open(file_name, "r", newline="") as f:
@@ -373,15 +369,12 @@ for file in file_list:
         last_size_tabu = int(split_line[0])
         last_nb_iteration = int(split_line[1])
         last_dones = (last_size_tabu, last_nb_iteration)
-        '''
-        size_tabu_list_for_this_file = size_tabu_list[size_tabu_list.index(last_size_tabu):]
-        nb_iteration_list_for_this_file = nb_iteration_list[nb_iteration_list.index(last_nb_iteration)+1:]
-        '''    
         try:
             params = params[params.index(last_dones) + 1:]
         except ValueError:
             pass
     # END
+    '''
     for size_tabu, nb_iteration in params:
     
         print(f"start size_tabu : {size_tabu}, nb_iteration {nb_iteration}")
@@ -473,7 +466,7 @@ def is_float(string):
         return False
     
 # moyenne de tous les fichiers
-
+'''
 files_content = []
 number_of_file = len(file_list)
 for file in file_list:
@@ -495,7 +488,7 @@ with open("./tabu_final/moyenne_100.csv", "w", newline="") as f:
                     sum += float(file_data[line][column])
                 f.write(str(sum/number_of_file) + ",")
         f.write("\r\n")
-
+'''
 '''
 vrptw = VRPTW('data101_short.vrp')
 vrptw.routes = random_solution(vrptw)
