@@ -85,7 +85,16 @@ Nous pouvons donc voir que la qualité du couple (4, 160) est la meilleure. Il e
 
 ### Analyse pour les fichiers de 100 éléments
 
-**TODO** 
+Nous avons effectué la même procédure pour les fichiers de 100 éléments, c'est qui nous donne ces trois meilleures couples :
+- (16, 40) : 202.0
+- (0, 40) : 201.0
+- (4, 40) : 197.9
+
+(les qualités des autres couples sont également disponible dans l'annexe *quality_100.csv*)
+
+Nous pouvons ici voir un fort impact du temps d'exécution. En effet, le temps d'exécution pour les fichiers de 100 éléments sont très long, et impact négativement la qualité du couple. 
+
+En changeant le poid de la fitness à 10 au lieu de 2, nous pouvons ainsi voir les solutions avec plus d'itérations remonter dans le classement des score (voir fichier *quality_100_x10.csv*).
 
 ## Détection de schéma
 
@@ -148,7 +157,9 @@ Comme dit précedement, le choix des hyper-paramètres (0, x) nous permettent d'
 ### Qualité
 
 Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe *quality.csv* **ajouter annexe** que, pour les couples (0, x) la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
-**graphe évolution qualité hill climbing**
+
+![alt text](image-3.png)
+Nous pouvons voir ce phénomène sur ce graphique (qui représente en ordronnée la qualité et en abscisse le nombre d'itération pour le hill climbing)
 
 La meilleure qualité est de 802. 
 
@@ -159,7 +170,7 @@ Ainsi, la méthode tabu est plus avantagueuse que le hill climbing sur le plan d
 ## Limites du tabou
 
 La principale limite de l'algorithme tabou est la quantité de voisin à générer. En effet, à chaque itération, tous les voisins possibles avec les opérateurs choisi sont générés.  
-**Croissance exponentielle (mettre calcul et graph)**
+
 Cette croissance peut nous pousser à limiter les opérateurs afin de limiter le nombre de voisins. 
 De plus, une autre limite est le choix des opérateurs. En effet, comme vu précédemment, il n'est pas possible de choisir deux opérateurs qui ont une intersections non-nulles.  
 
@@ -180,11 +191,5 @@ Notre principale difficulté a été le stockage dans la liste tabou. En effet, 
 ### Temps de génération
 
 Une autre difficulté est apparue lorsqu'il a fallu générer les données. En effet, l'algorithme étant très lent pour les gros jeux de données, et en étant limité par le language python, nous n'avons pas pu effectué toutes les exécutions que nous aurions voulu pour avoir une analyse plus poussée (nous aurions pu, si nous avions fait plus d'exécution pour le même couple, analyser les quartiles et la médiane par exemple, au lieu de ce limiter à la moyenne).
-
-## Notes à développer
-
-Mettre les graphes d'évolution de la fitness pour montrer que le tabu marche bien (et monter ce que ça donnait quand ça marchait pas)
-
-si la taille de la tabu est trop grande, on ne trouve plus d'action possible
 
 **mettre dans les annexes le fichier quality.csv, moyenne_30.csv moyenne_100.csv**
