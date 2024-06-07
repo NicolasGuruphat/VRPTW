@@ -246,7 +246,7 @@ Pour essayer de juger la qualité des résultats du recuit, la fitness est inté
 Les résultats du recuit sont la moyenne de cinq exécutions :
 
 | Fichier du jeu de données (nombre de clients) | Glouton | Recuit |
-|---|---|---|---|
+|---|---|---|
 | 101 (30) | 1089.282448171974 | 682.0534548509409 |
 | 102 (30) | 1057.6737806455794 | 562.489530446921 |
 | 111 (30) | 922.9133908185511 | 447.8438852063749 |
