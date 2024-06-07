@@ -1,0 +1,2 @@
+size_tabu,nb_iteration,avg_fitness,min_fitness,max_fitness,avg_iteration,min_iteration,max_iteration,avg_duration,min_duration,max_duration,avg_truck_removed,avg_truck,min_truck,max_truck,avg_relocate (%),avg_2_opt (%),
+0,0,3616.8882482678373,3616.8882482678373,3616.8882482678373,0.0,0.0,0.0,0.00011444091796875,0.00011444091796875,0.00011444091796875,0.0,40.0,40.0,40.0,0.0,0.0,

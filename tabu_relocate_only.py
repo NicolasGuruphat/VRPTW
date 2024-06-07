@@ -26,7 +26,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
     # "switch_two_deliveries_with_routes" : 0,
     # "reverse_same_route" : 0,
     "relocate" : 0
-}
+    }
     x_min = vrptw
     f_min = fitness(vrptw)
     tabu = []
@@ -119,7 +119,7 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
         #     break
         
         hash = current_x.str_hash() #f_current_x#
-        if sch_detect and (hash, str(tabu)) in already_explored.items():
+        if len(tabu) == size_tabu and sch_detect and (hash, str(tabu)) in already_explored.items():
             # break
             if not detected:
                 # print("boucle détectée")
@@ -148,21 +148,25 @@ def tabu_search(vrptw : VRPTW, size_tabu = SIZE_TABU, iteration_number = ITERATI
         j += 1
 
     # print(f"selected_action {selected_action} unselected_action {unselected_action}")
-    '''
+    # here 
     print(f"nombre d'itération économisées : {iteration_number - j}")
     print("### PARAMETRES ###")
     print(f"taille tabu : {size_tabu}")
     print(f"nombre d'iteration : {iteration_number}")
     print("### RESULTATS ###")
     print(f"nombre d'itération réel : {j}")
-    print(f"ecart : {initial - f_min}")
+    # print(f"ecart : {initial - f_min}")
     print(f"meilleure fitness : {f_min}")
     print(method_used)
     print(result_true,result_false)
     # print(method_used)
     plt.scatter(x,y, c=colors, s=size)
     plt.show()
-    '''
+    # end here
+    print(y)
+    with open("bonne_solution_100.txt", "w") as f:
+        f.write(str(y))
+    print(len(y))
     return x_min, f_min, j, method_used
 
 def get_neighborhood_without_tabu_list(vrptw : VRPTW, tabu):
@@ -327,13 +331,13 @@ SAME_PARAMETERS = 1
 # nb_iteration_list = [0, 40, 160]
 # size_tabu_list = [0,4,16]
 
-size_tabu_list = [0,4,16,64]
-nb_iteration_list = [0, 40, 160, 640]
+size_tabu_list = [16]
+nb_iteration_list = [640]
 
 # size_tabu_list = [0,4]
 # nb_iteration_list = [10,20]
 
-file_list = ["data101", "data102", "data111", "data112", "data201"]
+file_list = ["data101"]
 
 
 # for file in file_list
@@ -341,10 +345,9 @@ file_list = ["data101", "data102", "data111", "data112", "data201"]
 aimed_size_csv = len(size_tabu_list) * len(nb_iteration_list) + 1
 columns = ["size_tabu", "nb_iteration", "avg_fitness", "min_fitness", "max_fitness", "avg_iteration", "min_iteration", "max_iteration", "avg_duration", "min_duration", "max_duration", "avg_truck_removed" ,"avg_truck", "min_truck","max_truck","avg_relocate (%)", "avg_2_opt (%)"]
 for file in file_list:
-    break
     start_of_this_file = time.time()
     print(f"start file {file}")
-    file_name = "./tabu_final/output_"+file+".csv"
+    file_name = "./tabu_final/output_"+file+"_save.csv"
     # START
     params = []
     for size_tabu in size_tabu_list:
@@ -470,6 +473,7 @@ def is_float(string):
         return False
     
 # moyenne de tous les fichiers
+
 files_content = []
 number_of_file = len(file_list)
 for file in file_list:
@@ -479,7 +483,7 @@ for file in file_list:
     print(file_list)
     lines = [line.split(",") for line in lines]
     files_content.append(lines)
-with open("./tabu_final/moyenne.csv", "w", newline="") as f:
+with open("./tabu_final/moyenne_100.csv", "w", newline="") as f:
     for line in range(aimed_size_csv):
         for column in range(len(columns)):
             print(line, column)
@@ -491,6 +495,7 @@ with open("./tabu_final/moyenne.csv", "w", newline="") as f:
                     sum += float(file_data[line][column])
                 f.write(str(sum/number_of_file) + ",")
         f.write("\r\n")
+
 '''
 vrptw = VRPTW('data101_short.vrp')
 vrptw.routes = random_solution(vrptw)
