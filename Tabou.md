@@ -14,7 +14,7 @@ Les métriques que nous avons calculés pour l'algorithme tabou sont les suivant
 - avg_2_opt (%) : pourcentage d'utilisation de l'opérateur 2-opt
 
 
-L'analyse de cette algorithme sera réalisée principalement sur le fichier moyenne_30.csv **TODO : renomer le fichier**. Ce fichier contient la moyenne de chaqu'une des métrique pour chacun des fichiers d'entrée. Nous avons choisi d'analyser ce fichier plutot que celui des 100 clients pour plusieurs raison. D'abord, la quantité des données est bien supérieure. En effet, utiliser seulement les 30 premiers clients nous a permi de faire tourner 4 simulations pour chaque couple d'hyperparamètres. Ce point là est très important, car le résultat, particulièrement quand il y a peu d'itération ou bien beaucoup de camion, est très influencé par la solution aléatoire de départ. Ainsi, il est nécessaire de faire plusieurs simulations afin de lisser l'effet de l'aléatoire (bien que 4 soit assez peu, il est toujours préférable à 1, qui est le nombre de simulation faite pour les fichiers complets). Ensuite, les hyperparamètres choisi sont plus adaptés. En effet, les choix des hyperparamètres que nous allions utiliser a été réalisée suite à une réflexion sur les premiers résultats. Or, ces premiers résultats ont été générés à partir des données des 30 premiers clients.  
+L'analyse de cette algorithme sera réalisée principalement sur le fichier *moyenne_30.csv*. Ce fichier contient la moyenne de chaqu'une des métrique pour chacun des fichiers d'entrée. Nous avons choisi d'analyser ce fichier plutot que celui des 100 clients pour plusieurs raison. D'abord, la quantité des données est bien supérieure. En effet, utiliser seulement les 30 premiers clients nous a permi de faire tourner 4 simulations pour chaque couple d'hyperparamètres. Ce point là est très important, car le résultat, particulièrement quand il y a peu d'itération ou bien beaucoup de camion, est très influencé par la solution aléatoire de départ. Ainsi, il est nécessaire de faire plusieurs simulations afin de lisser l'effet de l'aléatoire (bien que 4 soit assez peu, il est toujours préférable à 1, qui est le nombre de simulation faite pour les fichiers complets). Ensuite, les hyperparamètres choisi sont plus adaptés. En effet, les choix des hyperparamètres que nous allions utiliser a été réalisée suite à une réflexion sur les premiers résultats. Or, ces premiers résultats ont été générés à partir des données des 30 premiers clients.  
 Les hyperparamètres que nous avons testé sont le produit cartésien de ces deux listes :
 - taille de la liste tabu : [0, 4, 16, 64]
 - nombre d'itération : [0, 40, 160, 640]
@@ -63,7 +63,7 @@ De même que pour la partie précedente, il permet également de poser une base 
 
 ### Choix de la métrique de comparaison
 
-Comme vu précedemment, nous avons deux hyper-paramètres à séléctionner : la taille de la liste et le nombre d'itération visé. Pour trouver les hyper-paramètres les plus adapatés, il faut ainsi trouver le couple qui donne les meilleur résultat en terme de fitness. Cependant, nous pouvons voir dans l'annexe 1 (**TODO : créer annexe 1, càd le fichier moyenne pour les tilles 30**) que, pour 30 éléments, plusieurs couples donne des fitness moyenne très proches. Parmi ces couples certains ont une durée de calcul beaucoup plus longue. Ainsi, pour évaluer la qualité d'une solution, nous allons également mettre en jeu cette metrique de temps en faisant un ratio : 
+Comme vu précedemment, nous avons deux hyper-paramètres à séléctionner : la taille de la liste et le nombre d'itération visé. Pour trouver les hyper-paramètres les plus adapatés, il faut ainsi trouver le couple qui donne les meilleur résultat en terme de fitness. Cependant, nous pouvons voir dans le fichier *moyenne_30.csv* que, pour 30 éléments, plusieurs couples donne des fitness moyenne très proches. Parmi ces couples certains ont une durée de calcul beaucoup plus longue. Ainsi, pour évaluer la qualité d'une solution, nous allons également mettre en jeu cette metrique de temps en faisant un ratio : 
 
 $$
 q=\frac{1}{f \times 2 + d} \times 1 000 000
@@ -89,8 +89,10 @@ Nous pouvons donc voir que la qualité du couple (4, 160) est la meilleure. Il e
 
 ## Détection de schéma
 
-**Mettre capture d'écran d'un schéma qui se répète**
 Une fois le développement de la liste tabu achevé, nous avons remarqué que dans la quasi totalité de nos premiers tests, nous pouvions visuellement voir une répetition de fitness. Cette répetition arrivait assez rapidement et nous avons donc penser qu'il serait utile de réaliser une détection de schéma afin d'éviter un grand nombre d'itérations inutiles.
+![alt text](schema_repere.png)
+Sur ce graphique, nous voyons où le schéma a été repéré en rouge. Pour voir plus clairement le schéma, voici une version zoomé sur la portion qui nous intéresse :
+![alt text](zoom.png)
 
 ### Développement
 
@@ -111,11 +113,10 @@ Nous pouvons interpreter cela ainsi : plus la liste est grande, moins vite nous 
 
 Comme dit précedement, nous avons décider d'utiliser les opérateur relocate et 2-opt. Ainsi, une métrique intéressante est la proportion de choix de chacun de ces opérateurs. 
 En regardant la matrice de corélation, nous pouvons observer un fort lien entre la proportion de 2-opt et le nombre d'IR et d'IP (0.48 et 0.86)
-Nous pouvons ainsi observer une évolution de la proportion de 2-opt en fonction du nombre d'IP et de la taille de la liste sur ces graphiques :
-**graphique evolution en fonction de la taille**
-**graphique evolution en fonction de l'IP**
-**potentiellement un seul graphe avec 4 courbes (3 courbes en fait, car on ne prend pas le hill climbing)**
-Notre interpretation de cette relation entre augmentation de la taille de la liste et augmenetation du pourcentage de 2-opt est que, lorsqu'on effectue beaucoup d'itérations les bonnes solutions du relocate sont dans la liste, donc impossible de les séléctionner. Cela se confirme si nous regardons le graphique de l'évolution en fonction de la taille. En effet, nous voyons que pour un même nombre d'itération, la proportion de 2-opt est plus grande. Ainsi, nous pouvons penser que toutes les bonnes solutions de relocate ont été séléctionnées et mise dans la liste, laissant plus de place au deuxième opérateur.
+Nous pouvons ainsi observer une évolution de la proportion de 2-opt en fonction du nombre d'IP et de la taille de la liste sur ce graphique :
+evolution de la proportion de 2-opt en fonction de la taille de la liste (abscisse : nb d'itération, ordonnée : proportion, les courbes représentent les différentes tialle de liste)
+![alt text](image.png)
+Notre interpretation de cette relation entre augmentation de la taille de la liste et augmentation du pourcentage de 2-opt est que, lorsqu'on effectue beaucoup d'itérations, les bonnes solutions du relocate sont dans la liste, donc impossible de les séléctionner. Cela se confirme si nous regardons ce graphique. En effet, nous voyons que pour un même nombre d'itération, la proportion de 2-opt est plus grande. Ainsi, nous pouvons penser que toutes les bonnes solutions de relocate ont été séléctionnées et mise dans la liste, laissant plus de place au deuxième opérateur.
 
 ### Lien entre les choix d'opérateurs et les autres variables
 
@@ -135,12 +136,10 @@ Nous allons maintenant voir quelles variables sont en lien avec la fitness de la
 ### Lien avec le nombre de camion
 
 Nous pouvons d'abord constater un lien très fort entre le nombre de camion de la solution finale et sa fitness (-0.99). En parallèle, nous pouvons également voir la même relation entre le nombre de camion enlevés et la fitness (0.99). Cette relation s'explique intuitivement par le fait que les meilleurs solutions ont en générale moins de camion que les solutions aléatoirement générées.
-**mettre graphique**
 
 ### Lien avec le nombre d'IR
 
 Nous pouvons ensuite voir un lien fort (mais toutefois moins que celui précedemment évoqué) entre la fitness et le nombre d'IR (-0.48). Ce lien nous montre que plus on réalise d'itération, moins la fitness sera haute (et donc meilleure sera la solution). Encore une fois, ce résultat est assez intuitif et ne nécessite pas une plus grande analyse.
-**mettre graphique**
 
 ## Comparaison tabou / hill climbing
 
@@ -148,7 +147,7 @@ Comme dit précedement, le choix des hyper-paramètres (0, x) nous permettent d'
 
 ### Qualité
 
-Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe quality.csv **ajouter annexe** que, pour les couples (0, x) la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
+Nous allons réutiliser notre ratio précedent afin de comparer les qualités entre les deux algorithme. Nous pouvons voir dans l'annexe *quality.csv* **ajouter annexe** que, pour les couples (0, x) la qualité est globalement constante pour 40, 160 et 640 IP. Cette valeur semble cohérente avec notre analyse précédente : l'algorithme converge rapidement et le nombre d'IP n'a donc que peu d'influence une fois cette converge passée. 
 **graphe évolution qualité hill climbing**
 
 La meilleure qualité est de 802. 
@@ -186,8 +185,6 @@ Une autre difficulté est apparue lorsqu'il a fallu générer les données. En e
 
 Mettre les graphes d'évolution de la fitness pour montrer que le tabu marche bien (et monter ce que ça donnait quand ça marchait pas)
 
-regarder les anciens rapports d'autres élèves
-
 si la taille de la tabu est trop grande, on ne trouve plus d'action possible
 
-**mettre dans les annexes le fichier quality.csv, moyenne.csv**
+**mettre dans les annexes le fichier quality.csv, moyenne_30.csv moyenne_100.csv**
