@@ -297,9 +297,9 @@ if SIM:
         opt_used = ["RS"]
         # opt_used = ["RS", "RSE"]
         # opt_used = ["R", "RS", "RE", "RSE", "RI", "RISE"]
-        n2s = [1000]
+        n2s = [10000]
         # n2s = [10000, 1000]
-        way_to_get_n1 = ["10SQRT"]
+        way_to_get_n1 = ["SQRT"]
         # way_to_get_n1 = ["SQRT", "LN", "2SQRT", "2LN"]
         t_n1s = [0.86]
         # t_n1s = [0.86]
@@ -342,7 +342,7 @@ if SIM:
             computed_mus = list()
             t_0s = list()
             n_1s = list()
-            for i in range(1):
+            for i in range(3):
                 try:
                     begin = time.time_ns()
                     vrptw, computed_mu, computed_t0, computed_n1 = simulated_annealing(VRPTW_, n2_param=n2, t_final=t_n1, **{"opt": opt, "way": way, "return_mu": True})

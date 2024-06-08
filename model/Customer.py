@@ -12,10 +12,10 @@ class Customer:
         self.id_name = id_name
         self.x = int(x)
         self.y = int(y)
-        self.ready_time = 0
-        self.due_time = 230
-        # self.ready_time = int(ready_time)
-        # self.due_time = int(due_time)
+        # self.ready_time = 0
+        # self.due_time = 230
+        self.ready_time = int(ready_time)
+        self.due_time = int(due_time)
         self.demand = int(demand)
         self.service = int(service)
     
