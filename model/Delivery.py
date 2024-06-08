@@ -18,3 +18,6 @@ class Delivery:
     
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Delivery) and value.customer == self.customer
+    
+    def str_hash(self) -> str:
+        return self.customer.str_hash()

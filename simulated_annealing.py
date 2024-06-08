@@ -1,7 +1,7 @@
 from random_solution import random_solution
 from config import SIMULATED_ANNEALING_DELTA_F_SAMPLE
 from model.VRPTW import VRPTW
-from utils import fitness_vrptwless, fitness, exchange_route_chunk, switch_two_deliveries, reverse, relocate_delivery
+from utils import fitness_vrptwless, fitness, exchange_route_chunk, switch_two_deliveries, reverse, relocate_delivery, check_validity
 from math import log, exp, sqrt
 from copy import deepcopy
 import random
@@ -179,6 +179,7 @@ def simulated_annealing(vrptw: VRPTW, t0_param: int = None, mu_param: float = No
     n2 = 10000
     if n2_param:
         n2 = n2_param
+
     n_no_upgrade_max = 10000
 
     x_min = deepcopy(vrptw)
@@ -404,5 +405,7 @@ else:
     print(f"BAT {BEST_AT}")
     print(f"Trucks init {len(VRPTW_.routes)}")
     print(f"Trucks computed {len(vrptw.routes)}")
+    print(f"Is random ok : {check_validity(VRPTW_)}")
+    print(f"Is ok : {check_validity(vrptw)}")
     display_vrp(VRPTW_.warehouse, VRPTW_.customers, VRPTW_.routes)
     display_vrp(vrptw.warehouse, vrptw.customers, vrptw.routes)

@@ -30,3 +30,6 @@ class VRPTW:
         
     def get_random_route(self):
         return choice(self.routes)
+    
+    def str_hash(self) -> str:
+        return "|".join([route.str_hash() for route in self.routes])

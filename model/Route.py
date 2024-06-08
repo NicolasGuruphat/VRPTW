@@ -24,3 +24,6 @@ class Route:
     
     def __eq__(self, value: object) -> bool:
         return isinstance(value, Route) and self.path == value.path
+    
+    def str_hash(self) -> str:
+        return "".join([delivery.str_hash() for delivery in self.path])
