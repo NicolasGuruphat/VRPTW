@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[scripts]
+sa = "python -m simulated_annealing.py"
+tabu = "python -m tabu.py"
+
+[packages]
+networkx = "*"
+numpy = "*"
+matplotlib = "*"
+pulp = "*"
+cspy = "*"
+vrpy = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.12"
