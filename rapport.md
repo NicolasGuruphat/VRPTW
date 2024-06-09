@@ -112,7 +112,10 @@ $\ln(t_{n1}) = \frac{\ln(\frac{\ln(0.8)}{\ln(0.01)})}{\ln(\mu)} \times \ln(\mu) 
 $\newline \Leftrightarrow$   
 $\ln(t_{n1}) = \ln(\frac{\ln(0.8)}{\ln(0.01)}) + \ln(t_0)$  
 
-Nous arrivons donc à une impasse dans ce cas, cela est logique car il existe une infinité de solutions pour $t_{n1} = \mu^{\frac{\ln(\frac{\ln(0.8)}{\ln(0.01)})}{\ln(\mu)}} \times t_0$  
+Nous arrivons donc à une impasse dans ce cas, cela est logique car il existe une infinité de solutions pour $t_{n1} = \mu^{\frac{\ln(\frac{\ln(0.8)}{\ln(0.01)})}{\ln(\mu)}} \times t_0$
+
+\pagebreak
+
 Nous allons donc calculer $\mu$ à partir de $t_{n1}$, $t_0$ et $n_1$ :
 
 $t_{n_1} = \mu^{n_1} \times t_0$  
@@ -128,7 +131,8 @@ $\newline \Leftrightarrow$
 $\frac{\ln(t_{n_1}) - \ln(t_0)}{n_1} = \ln(\mu)$  
 $\newline \Leftrightarrow$  
 $e^{\frac{\ln(t_{n_1}) - \ln(t_0)}{n_1}} = e^{\ln(\mu)}$   
-$\newline \Leftrightarrow \mu = e^{\frac{\ln(t_{n_1}) - \ln(t_0)}{n_1}}$  
+$\newline \Leftrightarrow$  
+$\mu = e^{\frac{\ln(t_{n_1}) - \ln(t_0)}{n_1}}$  
 
 Nous avons $t_0 = \frac{-\Delta f}{\ln(0.8)}$ et $t_{n_1} = 0.86$. Reste à déterminer $t_{n_1}$.  
 Pour cela, il faudrait trouver une valeur qui dépende de la taille de l'entrée. Plus la taille de l'entrée est grande, plus l'écart entre la fitness de la meilleure solution et celle de la pire est grand ou au moins constant (Raisonnement par l'absurde, si la différence entre la fitness de la meilleure solution et celle de la pire diminuait quand la taille de l'entrée augmente, alors la pire solution serait égale/semblable à la meilleure pour une taille d'entrée $x_{k}$ avec $k \longrightarrow \infty$ **et donc aussi pour $x_{k+1}$ !**. Or cela est vrai pour un et deux clients mais par pour trois alors c'est absurde). $\Delta f$ calculé à partir de solutions aléatoires pourrait donc être une bonne piste, il est, cependant, trop élevé pour être utilisé tel quel. Il existe plusieurs fonctions permettant de réduire cette valeur pour éviter un trop grand nombre d'itérations tout en évitant de trop rapidement converger vers l'infini : racine carrée et logarithme néperien. Nous continuerons donc avec $n_1 = \sqrt{|\Delta f|}$ ou $n_1 = \ln{|\Delta f|}$
@@ -151,13 +155,9 @@ On peut voir que Relocate seul n'est pas très efficace pour trouver une bonne s
 - RS : Relocate et Switch représentent le compromis entre efficacité (temps d'exécution) et pertinence, même s'il est dans le pire groupe quant à la fitness obtenue, il reste proche du reste du classement. Une bonne alternative pour se permettre de faire quelques tours de boucles supplémentaires si on veut réutiliser le temps économiser par la vitesse d'exécution.  
 
 Dans le cadre de la mise en place des fenêtres de temps, nous nous concentrerons donc principalement sur le couple d'opérateurs Relocate Switch.
-
 ![Moyenne des best at par groupe d'opérateurs](./graphs/best_at_group_by_opts.png)
-
 On peut voir que la vitesse de convergence est inversement porportionelle à la fitness finale. Malgré une fitness finale moins bonne, on pourrait donc envisager l'usage de Relocate comme seul opérateur si on veut une convergence rapide.
-
 ![Moyenne du temps d'exécution par groupe d'opérateurs](./graphs/exec_time_opts.png)
-
 Sur ce graphique on peut voir que Relocate seul prend beaucoup de temps, donc malgré une convergence rapide, son exécution est plus longue. Cela motive donc notre choix de rester sur les groupes d'opérateurs Relocate Switch Cross-Exchange et Relocate Switch.
 
 ### Mu calculé avec fenêtres de temps, Relocate + Switch vs Relocate + Swich + Cross-Exchange
@@ -219,30 +219,29 @@ Si on s'intéresse au nombre d'itérations avec l'obtention de la meilleure solu
 Si l'on doit choisir une façon de calculer $n_1$, on va tout d'abord rejeter $\ln$ qui donne des résultats sensiblement moins bons car ne laissent pas la convergence se faire à cause de valeurs trop petites. Les trois autres façons donnent des résultats similaires, il faudrait donc d'autres essais avec des jeux de données plus conséquents pour voir si une différence apparait entre ces derniers mais nous choisirons $\sqrt{}$ pour la suite pour réaliser le reste de l'analyse avec trente ou cent clients.
 
 Essayons maintenant de voir si la température finale $t_{n_1}$ peut avoir un impact intéressant sur la qualité des solutions. Nous avons précédemment déterminé que $t_{n_1} = 0.86$ pouvait être une bonne température finale et que cette même température devait être plutôt basse (voire corrélation ci-dessus). Mais tentons de la réduire, par exemple $t_{n_1} = 0.05$, pour voir si cela peut améliorer la solution :
-
 ![Fitness par fichier et température finale pour 300 clients](./graphs/fitness_fichier_t_finale_30.png)
-
 ![Fitness par fichier et température finale pour 100 clients](./graphs/fitness_fichier_t_finale_100.png)
+
+\pagebreak
 
 On observe une forte similitude entre les résultats, on en déduit que les deux températures finales ont un impact similaire sur la qualité de la solution et qu'il n'est pas nécessaire de diminuer $t_{n_1}$ en dessous de $0.86$.
 
 #### Augmenter la granularité de la température
 
 Dans cette partie nous allons essayer de déterminer s'il existe un bénéfice à rendre plus granulaire l'évolution de la température en diminuant $n_2$ et en augmentant $n_1$ ($\div 10$ et $\times 10$ respectivement). Pour ce faire, nous allons comparer une exécution avec $n_1 = \sqrt{|\Delta f|}$ et $n_2 = 10000$ (dénommée classique) avec $n_1 = 10\times \sqrt{|\Delta f|}$ et $n_2 = 1000$ (dénommée granulaire) pour l'ensemble des fichiers de données avec trente et cent clients. Les fitness représentées sont une moyenne sur cinq exécutions :
-
 ![Fitness par fichier et granularité de l'évolution de la température pour 30 clients](./classique_vs_granulaire/30_customers.png)
-
 ![Fitness par fichier et granularité de l'évolution de la température pour 100 clients](./classique_vs_granulaire/100_customers.png)
 
 On peut remarquer que les fitness sont très proches (hormis dans un cas mais l'aspect aléatoire est important avec un nombre d'exéctions aussi "petit"). Dans le cas des cent clients, on observe même que l'exécution classique donne de sensiblement meilleurs résultats. Pour comprendre ce qui pourrait en être la cause, cherchons à analyser l'évolution de la température durant l'exécution :
-
 ![Évolution de la fitness au cours du temps pour 100 clients](./graphs/evo_fitness_temps.png)
-
 On peut observer que les recuits exécutés avec une évolution plus granulaire de la température converge radicalement plus vite (très rapidement, trois fois plus rapide). Mais les solutions sont légèrement moins bonnes et cela car la convergence est plus rapide donc moins exploratoire. On peut donc envisager d'utiliser l'une des façons de faire suivant le cas, si on veut un résultat rapide, une granularité forte est plus intéressante au détriment de quelques minutes sur la fitness du résultat.
 
 #### Qualité de la solution
 
 Pour essayer de juger la qualité des résultats du recuit, la fitness est intéressante mais manque d'un référentiel pour passer du quantifiable au qualifiable. Pour la suite, nous travaillerons avec l'ensemble des fichiers de données et avec trente et cent clients ainsi que les fenêtres de temps. Les résultats seront comparés aux résultats gloutons (avec une priorité aux clients directement livrables les plus proches).
+
+\pagebreak
+
 Les résultats du recuit sont la moyenne de cinq exécutions :
 
 | Fichier du jeu de données (nombre de clients) | Glouton | Recuit |
